@@ -138,7 +138,7 @@ curl -Ls https://raw.githubusercontent.com/22p/somescripts/main/sing-box/client/
   | .outbounds[0].uuid = \"$UUID\" \
   | .outbounds[0].tls.server_name = \"$DNS\" \
   | .outbounds[0].tls.reality.public_key = \"`echo $X25519 | awk '{print $4}'`\" \
-  | .outbounds[0].tls.reality.short_id = \"$SHORTID\""
+  | .outbounds[0].tls.reality.short_id = \"$SHORTID\"" \
   | tee 03-outbounds-reality.json
 echo "客户端配置文件保存在当前目录下"
 
