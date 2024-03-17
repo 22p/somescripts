@@ -17,7 +17,7 @@
         "enabled": true,
         "alpn": "h3",
         "certificate_path": "/cert/fullchain.pem",
-        "key_path": "/cert/privatekey.key"
+        "key_path": "/cert/private.key"
       }
     }
   ]
