@@ -66,10 +66,11 @@ curl -Lso $PODMAN_DIR/www/nginx_conf/default.ssl https://raw.githubusercontent.c
 curl -Ls https://raw.githubusercontent.com/22p/somescripts/main/Quadlet/nginx.container | sed "s,/opt/podman,$PODMAN_DIR,g" > ~/.config/containers/systemd/nginx.container
 
 systemctl --user daemon-reload
+sleep 3
 systemctl --user --now enable nginx.service
 }
 
-sb_operation (){
+sb_tuic_operation (){
 
 read -p "请输入要监听的端口号：" LISTENPORT
 read -p "请输入服务器标签：" TAG
@@ -85,8 +86,7 @@ mkdir -p $PODMAN_DIR/sing-box
 # 通用
 curl -Ls https://raw.githubusercontent.com/22p/somescripts/main/Quadlet/sing-box.container | sed "s,/opt/podman,$PODMAN_DIR,g" > ~/.config/containers/systemd/sing-box.container
 curl -Lso $PODMAN_DIR/sing-box/00-log.json https://raw.githubusercontent.com/22p/somescripts/main/sing-box/server/00-log.json
-# tuic
-
+# TUIC
 curl -Ls https://raw.githubusercontent.com/22p/somescripts/main/sing-box/server/02-inbounds-tuic.json \
   | jq ".inbounds[0].listen_port = $LISTENPORT \
   | .inbounds[0].users[0].uuid = \"$UUID\" \
@@ -103,18 +103,62 @@ curl -Ls https://raw.githubusercontent.com/22p/somescripts/main/sing-box/client/
 echo "客户端配置文件保存在当前目录下"
 
 systemctl --user daemon-reload
+sleep 3
 systemctl --user --now enable sing-box.service
 }
+
+sb_vless_vision_reality_operation (){
+read -p "请输入要监听的端口号：" LISTENPORT
+read -p "请输入服务器标签：" TAG
+
+UUID=$(podman run --rm ghcr.io/sagernet/sing-box:latest generate uuid)
+X25519=$(podman run --rm ghcr.io/sagernet/sing-box:latest generate reality-keypair)
+SHORTID=$(podman run --rm ghcr.io/sagernet/sing-box:latest generate rand --hex 8)
+PASSWORD=$(podman run --rm ghcr.io/sagernet/sing-box:latest generate rand --base64 12)
+
+# sing-box 目录
+mkdir -p $PODMAN_DIR/sing-box
+
+# 通用
+curl -Ls https://raw.githubusercontent.com/22p/somescripts/main/Quadlet/sing-box.container | sed "s,/opt/podman,$PODMAN_DIR,g" > ~/.config/containers/systemd/sing-box.container
+curl -Lso $PODMAN_DIR/sing-box/00-log.json https://raw.githubusercontent.com/22p/somescripts/main/sing-box/server/00-log.json
+# VLESS+Vision+REALITY
+curl -Ls https://raw.githubusercontent.com/22p/somescripts/main/sing-box/server/02-inbounds-reality.json \
+  | jq ".inbounds[0].listen_port = $LISTENPORT \
+  | .inbounds[0].users[0].uuid = \"$UUID\" \
+  | .inbounds[0].tls.server_name = \"$DNS\" \
+  | .inbounds[0].tls.reality.private_key = \"`echo $X25519 | awk '{print $2}'`\" \
+  | .inbounds[0].tls.reality.short_id = \"$SHORTID\"" \
+  > "$PODMAN_DIR/sing-box/02-inbounds-reality.json"
+
+curl -Ls https://raw.githubusercontent.com/22p/somescripts/main/sing-box/client/03-outbounds-reality.json \
+  | jq ".outbounds[0].tag =  \"$TAG\" \
+  | .outbounds[0].server =  \"`curl -s4 ip.sb`\" \
+  | .outbounds[0].server_port = $LISTENPORT \
+  | .outbounds[0].uuid = \"$UUID\" \
+  | .outbounds[0].tls.server_name = \"$DNS\" \
+  | .outbounds[0].tls.reality.public_key = \"`echo $X25519 | awk '{print $4}'`\" \
+  | .outbounds[0].tls.reality.short_id = \"$SHORTID\""
+  | tee 03-outbounds-reality.json
+echo "客户端配置文件保存在当前目录下"
+
+systemctl --user daemon-reload
+sleep 3
+systemctl --user --now enable sing-box.service
+}
+
 
 echo "请选择一个选项 ："
 echo "1. SSL"
 echo "2. Nginx"
-echo "3. sing-box"
+echo "3. sing-box TUIC"
+echo "4. sing-box VLESS+Vision+REALITY"
 read choice
 
 case $choice in
   1) ssl_operation;;
   2) nginx_operation;;
-  3) sb_operation;;
+  3) sb_tuic_operation;;
+  4) sb_vless_vision_reality_operation;;
   *) echo "无效的选项";;
 esac
