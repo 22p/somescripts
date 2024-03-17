@@ -130,12 +130,11 @@ echo "客户端配置文件保存在当前目录下"
 systemctl --user daemon-reload
 systemctl --user restart sing-box.service
 }
-sb_vless_http2_reality_operation (){ }
-sb_vless_grpc_reality_operation (){ }
-sb_vless_vision_tls_operation (){ }
-sb_vless_websocket_tls_operation (){ }
+sb_vless_http2_reality_operation (){ exit 1; }
+sb_vless_grpc_reality_operation (){ exit 1; }
+sb_vless_vision_tls_operation (){ exit 1; }
+sb_vless_websocket_tls_operation (){ exit 1; }
 sb_vless_grpc_tls_operation (){
-read -p "请输入服务器名称：" SERVICENAME
 # 通用
 curl -Ls https://raw.githubusercontent.com/22p/somescripts/main/Quadlet/sing-box.container | sed "s,/opt/podman,$PODMAN_DIR,g" > ~/.config/containers/systemd/sing-box.container
 curl -Lso $PODMAN_DIR/sing-box/00-log.json https://raw.githubusercontent.com/22p/somescripts/main/sing-box/server/00-log.json
@@ -143,7 +142,7 @@ curl -Lso $PODMAN_DIR/sing-box/00-log.json https://raw.githubusercontent.com/22p
 curl -Ls https://raw.githubusercontent.com/22p/somescripts/main/sing-box/server/02-inbounds-grpc.json \
   | jq ".inbounds[0].listen_port = $LISTENPORT \
   | .inbounds[0].users[0].uuid = \"$UUID\" \
-  | .inbounds[0].transport.service_name = \"$SERVICENAME\"" \
+  | .inbounds[0].transport.service_name = \"$SHORTID\"" \
   > "$PODMAN_DIR/sing-box/02-inbounds-grpc.json"
 
 curl -Ls https://raw.githubusercontent.com/22p/somescripts/main/sing-box/client/03-outbounds-grpc.json \
@@ -152,7 +151,7 @@ curl -Ls https://raw.githubusercontent.com/22p/somescripts/main/sing-box/client/
   | .outbounds[0].server_port = $LISTENPORT \
   | .outbounds[0].uuid = \"$UUID\" \
   | .outbounds[0].tls.server_name = \"$DNS\" \
-  | .outbounds[0].transport.service_name = \"$SERVICENAME\"" \
+  | .outbounds[0].transport.service_name = \"$SHORTID\"" \
   | tee 03-outbounds-grpc.json
 echo "客户端配置文件保存在当前目录下"
 
