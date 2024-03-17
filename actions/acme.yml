@@ -1,0 +1,98 @@
+# Ref:https://blog.baoshuo.ren/post/actions-ssl-cert/
+# 名称
+name: Issue SSL Certificates
+
+# 触发条件
+on:
+  # 手动运行
+  workflow_dispatch:
+  # 定时运行
+  schedule:
+    # 每两个月运行一次
+    # - cron: '0 0 1 */2 *'
+    # 每周的星期天运行一次
+    - cron: '0 0 * * 0'
+
+# 全局环境变量
+env:
+  # Checkout 到的目录
+  CERTS_OUTPUT_BASE: certs
+  # 证书输出目录
+  CERTS_OUTPUT_DIRECTORY: example.com
+  # 证书文件名
+  FILE_FULLCHAIN: fullchain.pem
+  # 私钥文件名
+  FILE_KEY: privatekey.key
+
+jobs:
+  issue-ssl-certificate:
+    # 申请证书并 push 到 certs 分支
+    name: Issue SSL certificate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Checkout output branch
+        uses: actions/checkout@v4
+        with:
+          ref: certs
+          path: ${{ env.CERTS_OUTPUT_BASE }}
+
+      # 安装 acme.sh
+      - name: Install acme.sh
+        shell: bash
+        run: curl -s https://get.acme.sh | sh
+
+      # 解压 acme.sh 配置信息
+      - name: Extract account files for acme.sh
+        shell: bash
+        run: |
+          echo "$ACME_SH_ACCOUNT_TAR" | base64 -d | tar -C ~/.acme.sh -xz
+        env:
+          # Base64 编码的 acme.sh 配置信息
+          ACME_SH_ACCOUNT_TAR: ${{ secrets.ACME_SH_ACCOUNT_TAR }}
+
+      # 申请证书
+      - name: Issue SSL certificates
+        shell: bash
+        run: |
+          ~/.acme.sh/acme.sh --issue            \
+            -d "example.com" -d "*.example.com" \
+            --dns dns_cf --server google --valid-to  "+9d"
+
+      # 导出证书
+      - name: Copy certificate to output paths
+        shell: bash
+        run: |
+          ACME_SH_TEMP_DIR="$(mktemp -d)"
+          ACME_SH_TEMP_FILE_FULLCHAIN="$ACME_SH_TEMP_DIR/fullchain.pem"
+          ACME_SH_TEMP_FILE_KEY="$ACME_SH_TEMP_DIR/key.pem"
+
+          # 不要忘记修改这里的 -d 参数值为上方的第一个域名
+          ~/.acme.sh/acme.sh --install-cert -d "example.com" --fullchain-file "$ACME_SH_TEMP_FILE_FULLCHAIN" --key-file "$ACME_SH_TEMP_FILE_KEY"
+
+          [[ -z "$ACME_SH_OUTPUT_FULLCHAIN" ]] || (mkdir -p "$(dirname "$ACME_SH_OUTPUT_FULLCHAIN")" && cp "$ACME_SH_TEMP_FILE_FULLCHAIN" "$ACME_SH_OUTPUT_FULLCHAIN")
+          [[ -z "$ACME_SH_OUTPUT_KEY" ]] || (mkdir -p "$(dirname "$ACME_SH_OUTPUT_KEY")" && cp "$ACME_SH_TEMP_FILE_KEY" "$ACME_SH_OUTPUT_KEY")
+
+          rm -rf "$ACME_SH_TEMP_DIR"
+        env:
+          ACME_SH_OUTPUT_FULLCHAIN: ${{ env.CERTS_OUTPUT_BASE }}/${{ env.CERTS_OUTPUT_DIRECTORY }}/${{ env.FILE_FULLCHAIN }}
+          ACME_SH_OUTPUT_KEY: ${{ env.CERTS_OUTPUT_BASE }}/${{ env.CERTS_OUTPUT_DIRECTORY }}/${{ env.FILE_KEY }}
+
+      # 上传证书
+      - name: Push to GitHub
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          cd "$CERTS_DIRECTORY"
+
+          git add "$FILE_FULLCHAIN" "$FILE_KEY"
+          git commit -m "Upload certificates on $(date '+%Y-%m-%d %H:%M:%S')"
+          git push
+        env:
+          TZ: Asia/Shanghai
+          CERTS_DIRECTORY: ${{ env.CERTS_OUTPUT_BASE }}/${{ env.CERTS_OUTPUT_DIRECTORY }}
