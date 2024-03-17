@@ -103,8 +103,7 @@ curl -Ls https://raw.githubusercontent.com/22p/somescripts/main/sing-box/client/
 echo "客户端配置文件保存在当前目录下"
 
 systemctl --user daemon-reload
-sleep 3
-systemctl --user --now enable sing-box.service
+systemctl --user restart sing-box.service
 }
 
 sb_vless_vision_reality_operation (){
@@ -143,8 +142,7 @@ curl -Ls https://raw.githubusercontent.com/22p/somescripts/main/sing-box/client/
 echo "客户端配置文件保存在当前目录下"
 
 systemctl --user daemon-reload
-sleep 3
-systemctl --user --now enable sing-box.service
+systemctl --user restart sing-box.service
 }
 
 
