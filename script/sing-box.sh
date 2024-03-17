@@ -16,6 +16,13 @@ GITHUB_TOKEN=
 REPOS=
 # 获取用户输入
 read -p "请输入域名：" DNS
+read -p "请输入要监听的端口号：" LISTENPORT
+read -p "请输入服务器标签：" TAG
+
+UUID=$(podman run --rm ghcr.io/sagernet/sing-box:latest generate uuid)
+X25519=$(podman run --rm ghcr.io/sagernet/sing-box:latest generate reality-keypair)
+SHORTID=$(podman run --rm ghcr.io/sagernet/sing-box:latest generate rand --hex 8)
+PASSWORD=$(podman run --rm ghcr.io/sagernet/sing-box:latest generate rand --base64 12)
 
 echo "创建podmam运行目录 可能需要sudo密码"
 sudo mkdir -p $PODMAN_DIR
@@ -29,6 +36,8 @@ mkdir -p ~/.config/containers/systemd
 mkdir -p ~/.config/systemd/user
 # 设置SELinux标签
 chcon -R -t container_file_t $PODMAN_DIR >/dev/null 2>&1
+# sing-box 目录
+mkdir -p $PODMAN_DIR/sing-box
 ################################################
 #                 Header end                   #
 ################################################
@@ -71,18 +80,6 @@ systemctl --user --now enable nginx.service
 }
 
 sb_tuic_operation (){
-
-read -p "请输入要监听的端口号：" LISTENPORT
-read -p "请输入服务器标签：" TAG
-
-UUID=$(podman run --rm ghcr.io/sagernet/sing-box:latest generate uuid)
-X25519=$(podman run --rm ghcr.io/sagernet/sing-box:latest generate reality-keypair)
-SHORTID=$(podman run --rm ghcr.io/sagernet/sing-box:latest generate rand --hex 8)
-PASSWORD=$(podman run --rm ghcr.io/sagernet/sing-box:latest generate rand --base64 12)
-
-# sing-box 目录
-mkdir -p $PODMAN_DIR/sing-box
-
 # 通用
 curl -Ls https://raw.githubusercontent.com/22p/somescripts/main/Quadlet/sing-box.container | sed "s,/opt/podman,$PODMAN_DIR,g" > ~/.config/containers/systemd/sing-box.container
 curl -Lso $PODMAN_DIR/sing-box/00-log.json https://raw.githubusercontent.com/22p/somescripts/main/sing-box/server/00-log.json
@@ -107,17 +104,6 @@ systemctl --user restart sing-box.service
 }
 
 sb_vless_vision_reality_operation (){
-read -p "请输入要监听的端口号：" LISTENPORT
-read -p "请输入服务器标签：" TAG
-
-UUID=$(podman run --rm ghcr.io/sagernet/sing-box:latest generate uuid)
-X25519=$(podman run --rm ghcr.io/sagernet/sing-box:latest generate reality-keypair)
-SHORTID=$(podman run --rm ghcr.io/sagernet/sing-box:latest generate rand --hex 8)
-PASSWORD=$(podman run --rm ghcr.io/sagernet/sing-box:latest generate rand --base64 12)
-
-# sing-box 目录
-mkdir -p $PODMAN_DIR/sing-box
-
 # 通用
 curl -Ls https://raw.githubusercontent.com/22p/somescripts/main/Quadlet/sing-box.container | sed "s,/opt/podman,$PODMAN_DIR,g" > ~/.config/containers/systemd/sing-box.container
 curl -Lso $PODMAN_DIR/sing-box/00-log.json https://raw.githubusercontent.com/22p/somescripts/main/sing-box/server/00-log.json
@@ -144,13 +130,42 @@ echo "客户端配置文件保存在当前目录下"
 systemctl --user daemon-reload
 systemctl --user restart sing-box.service
 }
+sb_vless_http2_reality_operation (){ }
+sb_vless_grpc_reality_operation (){ }
+sb_vless_vision_tls_operation (){ }
+sb_vless_websocket_tls_operation (){ }
+sb_vless_grpc_tls_operation (){
+read -p "请输入服务器名称：" SERVICENAME
+# 通用
+curl -Ls https://raw.githubusercontent.com/22p/somescripts/main/Quadlet/sing-box.container | sed "s,/opt/podman,$PODMAN_DIR,g" > ~/.config/containers/systemd/sing-box.container
+curl -Lso $PODMAN_DIR/sing-box/00-log.json https://raw.githubusercontent.com/22p/somescripts/main/sing-box/server/00-log.json
+# VLESS+gRPC+TLS
+curl -Ls https://raw.githubusercontent.com/22p/somescripts/main/sing-box/server/02-inbounds-grpc.json \
+  | jq ".inbounds[0].listen_port = $LISTENPORT \
+  | .inbounds[0].users[0].uuid = \"$UUID\" \
+  | .inbounds[0].transport.service_name = \"$SERVICENAME\"" \
+  > "$PODMAN_DIR/sing-box/02-inbounds-grpc.json"
 
+curl -Ls https://raw.githubusercontent.com/22p/somescripts/main/sing-box/client/03-outbounds-grpc.json \
+  | jq ".outbounds[0].tag =  \"$TAG\" \
+  | .outbounds[0].server =  \"`curl -s4 ip.sb`\" \
+  | .outbounds[0].server_port = $LISTENPORT \
+  | .outbounds[0].uuid = \"$UUID\" \
+  | .outbounds[0].tls.server_name = \"$DNS\" \
+  | .outbounds[0].transport.service_name = \"$SERVICENAME\"" \
+  | tee 03-outbounds-grpc.json
+echo "客户端配置文件保存在当前目录下"
+
+systemctl --user daemon-reload
+systemctl --user restart sing-box.service
+}
 
 echo "请选择一个选项 ："
 echo "1. SSL"
 echo "2. Nginx"
 echo "3. sing-box TUIC"
 echo "4. sing-box VLESS+Vision+REALITY"
+echo "9. sing-box VLESS+gRPC+TLS"
 read choice
 
 case $choice in
@@ -158,5 +173,10 @@ case $choice in
   2) nginx_operation;;
   3) sb_tuic_operation;;
   4) sb_vless_vision_reality_operation;;
+  5) sb_vless_http2_reality_operation;;
+  6) sb_vless_grpc_reality_operation;;
+  7) sb_vless_vision_tls_operation;;
+  8) sb_vless_websocket_tls_operation;;
+  9) sb_vless_grpc_tls_operation;;
   *) echo "无效的选项";;
 esac
