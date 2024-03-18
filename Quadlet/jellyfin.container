@@ -1,0 +1,27 @@
+# https://jellyfin.org/docs/general/installation/container/#managing-via-systemd
+# https://github.com/22p/somescripts/raw/main/blob/fonts.tar.xz
+[Unit]
+Description=Jellyfin Quadlet
+
+[Container]
+Image=docker.io/jellyfin/jellyfin
+ContainerName=jellyfin
+AutoUpdate=registry
+AddDevice=/dev/dri:/dev/dri
+UserNS=keep-id
+Environment=TZ=Asia/Shanghai
+Volume=/opt/podman/jellyfin:/config
+Volume=/opt/podman/fonts:/usr/share/fonts/opentype
+Volume=/opt/data:/data
+PublishPort=8096:8096
+PublishPort=8920:8920
+PublishPort=1900:1900/udp
+
+[Service]
+Restart=always
+TimeoutStartSec=900
+# Inform systemd of additional exit status
+SuccessExitStatus=0 143
+
+[Install]
+WantedBy=multi-user.target default.target

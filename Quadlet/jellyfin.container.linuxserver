@@ -1,0 +1,24 @@
+[Unit]
+Description=Jellyfin Quadlet
+
+[Container]
+Image=docker.io/linuxserver/jellyfin
+ContainerName=jellyfin
+AutoUpdate=registry
+AddDevice=/dev/dri:/dev/dri
+Environment=PUID=0
+Environment=PGID=0
+Environment=TZ=Asia/Shanghai
+Volume=/opt/podman/jellyfin:/config
+Volume=/opt/podman/fonts:/usr/share/fonts/opentype
+Volume=/opt/data:/data
+PublishPort=8096:8096
+PublishPort=8920:8920
+PublishPort=1900:1900/udp
+
+[Service]
+Restart=always
+TimeoutStartSec=900
+
+[Install]
+WantedBy=multi-user.target default.target
