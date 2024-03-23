@@ -8,10 +8,12 @@ CF_RECORD_ID_A=
 CF_RECORD_ID_AAAA=
 
 OLD_IP=$(cat $FILE)
-IPv4=$(ip a s ppp0 | grep global | grep -oP 'inet \K[\da-f.:]+')
-IPv6=$(ip a s ppp0 | grep global | grep -oP 'inet6 \K[\da-f.:]+')
-#IPV4=$(ip addr show  ppp0 | grep "global ppp0" | awk '{print $2}')
-#IPv6=$(ip addr show  ppp0 | grep "global dynamic" | awk '{print $2}')
+# 从此网卡获取IP
+NIC=ppp0
+IPv4=$(ip a s $NIC | grep global | grep -oP 'inet \K[\da-f.:]+')
+IPv6=$(ip a s $NIC | grep global | grep -oP 'inet6 \K[\da-f.:]+')
+#IPv4=$(ip addr show  $NIC | grep "global $NIC" | awk '{print $2}')
+#IPv6=$(ip addr show  $NIC | grep "global dynamic" | awk '{print $2}' | cut -d'/' -f1 | sed -n '1p')
 
 if [ "$IPv6" != "$OLD_IP" ]
 then
