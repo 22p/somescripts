@@ -17,19 +17,26 @@ IPv6=$(ip a s $NIC | grep global | grep -oP 'inet6 \K[\da-f.:]+')
 
 if [ "$IPv6" != "$OLD_IP" ]
 then
-  echo "Renew IPv4: $IPv4, IPv6: $IPv6"
-  curl -s -X PUT "https://api.cloudflare.com/client/v4/zones/$CF_ZONE_ID/dns_records/$CF_RECORD_ID_A" \
+  # IPv4
+  CF_SUCCESS_A=$(curl -s -X PUT "https://api.cloudflare.com/client/v4/zones/$CF_ZONE_ID/dns_records/$CF_RECORD_ID_A" \
     -H "Authorization: Bearer $CF_TOKEN" \
     -H "Content-Type: application/json" \
-    --data '{"type":"A","name":"'$DNS'","content":"'$IPv4'","ttl":60,"proxied":false}' | jq '.'
-
-  curl -s -X PUT "https://api.cloudflare.com/client/v4/zones/$CF_ZONE_ID/dns_records/$CF_RECORD_ID_AAAA" \
+    --data '{"type":"A","name":"'$DNS'","content":"'$IPv4'","ttl":60,"proxied":false}' | jq -r '.success')
+  # IPv6
+  CF_SUCCESS_AAAA=$(curl -s -X PUT "https://api.cloudflare.com/client/v4/zones/$CF_ZONE_ID/dns_records/$CF_RECORD_ID_AAAA" \
     -H "Authorization: Bearer $CF_TOKEN" \
     -H "Content-Type: application/json" \
-    --data '{"type":"AAAA","name":"'$DNS'","content":"'$IPv6'","ttl":60,"proxied":false}' | jq '.'
+    --data '{"type":"AAAA","name":"'$DNS'","content":"'$IPv6'","ttl":60,"proxied":false}' | jq -r '.success')
 
-  curl -s "https://api.day.app/***secret***/Renew%20IP/IPv4：$IPv4，IPv6：$IPv6?sound=minuet"
-  echo $IPv6 > $FILE
+    if [ "$CF_SUCCESS_A" == "true" ] && [ "$CF_SUCCESS_AAAA" == "true" ]
+    then
+      echo "Renew IPv4: $IPv4, IPv6: $IPv6"
+      curl -s "https://api.day.app/***secret***/Renew%20IP/IPv4：$IPv4，IPv6：$IPv6?sound=minuet"
+      echo $IPv6 > $FILE
+    else
+      echo "Update ERROR :-C"
+      exit 1
+    fi
 else
   echo "No change"
 fi
