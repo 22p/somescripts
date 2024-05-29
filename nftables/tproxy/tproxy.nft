@@ -1,0 +1,36 @@
+#!/usr/bin/nft -f
+
+# 修改为你的透明代理程序的端口
+define TPROXY_PORT = 12345
+# 修改为你的mark值
+define FWMARK = 0x440
+
+table inet TProxy
+delete table inet TProxy
+
+table inet TProxy {
+## 保留 ip 地址
+include "/etc/nftables/tproxy/ip_reserved.nft"
+## 大陆 ipv4 地址
+include "/etc/nftables/tproxy/ip4_cn.nft"
+## 大陆 ipv6 地址
+include "/etc/nftables/tproxy/ip6_cn.nft"
+
+chain prerouting {
+	type filter hook prerouting priority mangle; policy accept;
+	ip daddr @ip4_reserved return
+	ip6 daddr @ip6_reserved return
+	ip daddr @ip4_cn return
+	ip6 daddr @ip6_cn return
+	meta l4proto { tcp, udp } tproxy to :$TPROXY_PORT meta mark set $FWMARK accept
+}
+
+chain output {
+	type route hook output priority mangle; policy accept;
+	ip daddr @ip4_reserved return
+	ip6 daddr @ip6_reserved return
+	ip daddr @ip4_cn return
+	ip6 daddr @ip6_cn return
+	meta l4proto { tcp, udp } meta mark set $FWMARK
+}
+}

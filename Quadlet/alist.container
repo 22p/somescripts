@@ -1,0 +1,17 @@
+[Unit]
+Description=alist Quadlet
+
+[Container]
+Image=docker.io/xhofe/alist:latest
+ContainerName=alist
+AutoUpdate=registry
+Environment=TZ=Asia/Shanghai
+Volume=/opt/podman/alist:/opt/alist/data
+PublishPort=192.168.168.1:5244:5244
+
+[Service]
+Restart=always
+TimeoutStartSec=900
+
+[Install]
+WantedBy=multi-user.target default.target

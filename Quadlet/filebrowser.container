@@ -1,0 +1,20 @@
+[Unit]
+Description=filebrowser Quadlet
+
+[Container]
+Image=docker.io/filebrowser/filebrowser:latest
+ContainerName=filebrowser
+AutoUpdate=registry
+Environment=TZ=Asia/Shanghai
+Volume=/opt/data:/srv
+Volume=/opt/podman/filebrowser/database.db:/database.db
+Volume=/opt/podman/filebrowser/.filebrowser.json:/.filebrowser.json
+Volume=/opt/podman/socket/filebrowser:/dev/shm
+Network=none
+
+[Service]
+Restart=always
+TimeoutStartSec=900
+
+[Install]
+WantedBy=multi-user.target default.target

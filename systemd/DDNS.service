@@ -1,0 +1,9 @@
+[Unit]
+Description=Execute DDNS script
+
+[Service]
+Type=oneshot
+ExecStart=/opt/script/cf_ddns.sh ***cf_token***
+
+[Install]
+WantedBy=default.target

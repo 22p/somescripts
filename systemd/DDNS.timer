@@ -1,0 +1,9 @@
+[Unit]
+Description=Run DDNS script every 5 minutes
+
+[Timer]
+OnUnitActiveSec=5min
+Unit=DDNS.service
+
+[Install]
+WantedBy=timers.target

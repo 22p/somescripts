@@ -1,0 +1,9 @@
+[Unit]
+Description=Execute Update-cert script
+
+[Service]
+Type=oneshot
+ExecStart=/opt/script/update-cert.sh
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,24 @@
+{
+  "inbounds": [
+    {
+      "type": "tuic",
+      "tag": "tuic-in",
+      "listen": "::",
+      "listen_port": 443,
+      "users": [
+        {
+          "uuid": "00000000-0000-0000-0000-000000000000",
+          "password": "0000000000"
+        }
+      ],
+      "congestion_control": "bbr",
+      "zero_rtt_handshake": true,
+      "tls": {
+        "enabled": true,
+        "alpn": "h3",
+        "certificate_path": "/cert/fullchain.pem",
+        "key_path": "/cert/private.key"
+      }
+    }
+  ]
+}

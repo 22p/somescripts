@@ -1,0 +1,20 @@
+[Unit]
+Description=aria2-ui Quadlet
+
+[Container]
+Image=docker.io/hurlenko/aria2-ariang
+ContainerName=aria2-ui
+AutoUpdate=registry
+Environment=TZ=Asia/Shanghai
+Environment=ARIA2RPCPORT=443
+Environment=RPC_SECRET=*****secret*****
+Volume=/opt/data/download:/aria2/data
+Volume=/opt/podman/aria2:/aria2/conf
+PublishPort=192.168.168.1:8080:8080
+
+[Service]
+Restart=always
+TimeoutStartSec=900
+
+[Install]
+WantedBy=multi-user.target default.target
