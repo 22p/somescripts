@@ -1,96 +1,76 @@
-# 需要在仓库的 Settings > Actions > General 页面的底部赋予其写入权限
-name: Issue SSL Certificates
+name: acme ssl automation
 
 # 触发条件
 on:
-  # 手动运行
   workflow_dispatch:
-  # 定时运行
   schedule:
-    # 每两个月运行一次
-    - cron: '0 0 1 */2 *'
+    # 每周日运行一次
+    - cron: '0 0 * * 0'
 
-# 全局环境变量
 env:
-  # 域名
-  DOMAINS: "example.com,example.org"
+  TZ: Asia/Shanghai
 
 jobs:
-  issue-ssl-certificate:
-    # 申请证书并 push 到 certs 分支
-    name: Issue SSL certificate
+  ssl-cert-issuer:
     runs-on: ubuntu-latest
     steps:
-      # 签出存储库
-      - name: Checkout
+      - name: Checkout Repository
         uses: actions/checkout@v4
         with:
-          # 这里ref可以改成要上传到的分支
-          ref: certs
-          path: certs
+          ref: main
+          path: .lego
 
-      # 安装 lego
       - name: Install lego
         shell: bash
         run: |
           RELEASE_INFO=$(curl -s https://api.github.com/repos/go-acme/lego/releases/latest)
           TAG_NAME=$(echo $RELEASE_INFO | jq -r '.tag_name')
           curl -sLO $(echo $RELEASE_INFO | jq -r ".assets[] | select(.name == \"lego_${TAG_NAME}_linux_amd64.tar.gz\") | .browser_download_url")
-          tar -xzf lego_* 
+          tar -xzf lego_*
 
-      # 解压 lego 配置信息
       - name: Extract account files for lego
         shell: bash
-        # Base64 编码的 lego 配置信息
-        # tar cz .lego/accounts | base64 -w0
         run: |
           echo "${{ secrets.LEGO_ACCOUNT_TAR }}" | base64 -d | tar -C . -xz
 
-      # 申请证书
-      - name: Issue SSL certificates
+      # 申请或续订证书
+      - name: Issue or Renew Certificates
         shell: bash
-        # ACMES=(
-        # "https://acme-staging-v02.api.letsencrypt.org/directory"
-        # "https://dv.acme-v02.test-api.pki.goog/directory --eab"
-        # )
-
-        # 修改下面的配置  使用外部账户需要添加 --eab
         run: |
+          letsencrypt="https://acme-v02.api.letsencrypt.org/directory"
+          google="https://dv.acme-v02.api.pki.goog/directory"
+          zerossl="https://acme.zerossl.com/v2/DV90"
+          letsencrypt_test="https://acme-staging-v02.api.letsencrypt.org/directory"
+          google_test="https://dv.acme-v02.test-api.pki.goog/directory"
 
-          ACMES=(
-            "https://acme-v02.api.letsencrypt.org/directory"
-            "https://dv.acme-v02.api.pki.goog/directory --eab"
-            "https://acme.zerossl.com/v2/DV90 --eab"
-          )
-          IFS=',' read -ra DOMAINS_ARRAY <<< "$DOMAINS"
-          for DOMAIN in "${DOMAINS_ARRAY[@]}"; do
+          DOMAIN_LIST=(${{ secrets.DOMAIN_LIST }})
+          for domain_info in "${DOMAIN_LIST[@]}"; do
 
-          # 随机使用不同的acme服务器
-          RANDOM_ACME="${ACMES[$((RANDOM % ${#ACMES[@]}))]}"
-
-          CF_DNS_API_TOKEN="${{ secrets.DNS_API_TOKEN }}" \
-          ./lego --accept-tos --email ssl@example.com \
-            --dns cloudflare --server $RANDOM_ACME \
+            DOMAIN=$(echo $domain_info | cut -d ':' -f1)
+            DNS=$(echo $domain_info | cut -d ':' -f2)
+            ACME_SERVER=$(echo $domain_info | cut -d ':' -f3)
+            EAB=$(echo $domain_info | cut -d ':' -f4)
+            echo "::add-mask::$DOMAIN"
+            ACTION=renew
+            if [ ! -f "./.lego/certificates/$DOMAIN.crt" ]; then
+              ACTION=run
+            fi
+            ${{ secrets.DNS_API }}
+            ./lego --accept-tos --email ${{ secrets.CERT_EMAIL }} \
+            --dns $DNS --server ${!ACME_SERVER} $EAB \
             --domains $DOMAIN --domains *.$DOMAIN \
-            run
+            $ACTION
           done
 
-      - name: Copy certificate to output paths
-        shell: bash
-        run: |
-          IFS=',' read -ra DOMAINS_ARRAY <<< "$DOMAINS"
-          for DOMAIN in "${DOMAINS_ARRAY[@]}"; do
-          mkdir -p certs/$DOMAIN
-          cp .lego/certificates/$DOMAIN.* certs/$DOMAIN
-          done
-
-      - name: Push to GitHub
+      - name: Push Certificates to GitHub
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          cd "./certs"
-          git add .
-          git commit -m "Upload certificates on $(date '+%Y-%m-%d %H:%M:%S')"
-          git push
-        env:
-          TZ: Asia/Shanghai
+          cd ./.lego
+          git add certificates
+          if [ -z "$(git diff --cached)" ]; then
+            echo "No changes in certificates to commit."
+          else
+            git commit -m "Upload certificates on $(date '+%Y-%m-%d %H:%M:%S')"
+            git push
+          fi
