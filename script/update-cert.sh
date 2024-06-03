@@ -10,12 +10,12 @@ curl -s -L \
   -H "Accept: application/vnd.github.raw+json" \
   -H "Authorization: Bearer $GITHUB_TOKEN" \
   -H "X-GitHub-Api-Version: 2022-11-28" \
-  https://api.github.com/repos/$REPOS/contents/$DNS/$DNS.crt?ref=certs -o $CERT_DIR/$DNS.crt
+  https://api.github.com/repos/$REPOS/contents/certificates/$DNS.crt?ref=main -o $CERT_DIR/$DNS.crt
 curl -s -L \
   -H "Accept: application/vnd.github.raw+json" \
   -H "Authorization: Bearer $GITHUB_TOKEN" \
   -H "X-GitHub-Api-Version: 2022-11-28" \
-  https://api.github.com/repos/$REPOS/contents/$DNS/$DNS.key?ref=certs -o $CERT_DIR/$DNS.key
+  https://api.github.com/repos/$REPOS/contents/certificates/$DNS.key?ref=main -o $CERT_DIR/$DNS.key
 
 if grep -q "BEGIN CERTIFICATE" $CERT_DIR/$DNS.crt; then
   # 重新加载Nginx配置文件
