@@ -1,17 +1,36 @@
-name: acme ssl automation
+name: acme ssl revoke
 
 # 触发条件
 on:
   workflow_dispatch:
-  schedule:
-    # 每周日运行一次
-    - cron: '0 0 * * 0'
+    inputs:
+      DOMAIN:
+        description: 'Specify the domain to add to the process.'
+        required: true
+        default: 'example.com'
+      ACME_SERVER:
+        description: 'Choose the Certificate Authority (CA) name.'
+        required: true
+        default: 'letsencrypt'
+        type: choice
+        options:
+          - letsencrypt
+          - google
+          - zerossl
+      APPEND:
+        description: 'Specify whether to use External Account Binding (EAB).'
+        required: false
+        default: ''
+        type: choice
+        options:
+          - ''
+          - --eab
 
 env:
   TZ: Asia/Shanghai
 
 jobs:
-  ssl-cert-issuer:
+  ssl-cert-revoke:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
@@ -33,32 +52,18 @@ jobs:
         run: |
           echo "${{ secrets.LEGO_ACCOUNT_TAR }}" | base64 -d | tar -C . -xz
 
-      # 申请或续订证书
-      - name: Issue or Renew Certificates
+      # 吊销证书
+      - name: Revoke Certificates
         shell: bash
         run: |
-          DOMAIN_LIST=(${{ secrets.DOMAIN_LIST }})
-          for domain_info in "${DOMAIN_LIST[@]}"; do
-            DOMAIN=$(echo $domain_info | cut -d ':' -f1)
-            DNS=$(echo $domain_info | cut -d ':' -f2)
-            ACME_SERVER=$(echo $domain_info | cut -d ':' -f3)
-            APPEND=$(echo $domain_info | cut -d ':' -f4)
-            echo "::add-mask::$DOMAIN"
-            ACTION=renew
-            if [ ! -f "./.lego/certificates/$DOMAIN.crt" ]; then
-              ACTION=run
-            fi
-            ${{ secrets.DNS_API }}
-            ./lego --accept-tos --email ${{ secrets.CERT_EMAIL }} \
-            --dns $DNS --server ${!ACME_SERVER} \
-            --domains $DOMAIN --domains *.$DOMAIN $APPEND \
-            $ACTION
-          done
+          ./lego --accept-tos --email ${{ secrets.CERT_EMAIL }} \
+          --server ${!ACME_SERVER} --domains ${{ github.event.inputs.DOMAIN }} ${{ github.event.inputs.APPEND }} \
+          revoke
         env:
+          ACME_SERVER: ${{ github.event.inputs.ACME_SERVER }}
           letsencrypt: https://acme-v02.api.letsencrypt.org/directory
           zerossl: https://acme.zerossl.com/v2/DV90
           google: https://dv.acme-v02.api.pki.goog/directory
-        continue-on-error: true
 
       - name: Push Certificates to GitHub
         run: |
@@ -69,6 +74,6 @@ jobs:
           if [ -z "$(git diff --cached)" ]; then
             echo "No changes in certificates to commit."
           else
-            git commit -m "Upload certificates on $(date '+%Y-%m-%d %H:%M:%S')"
+            git commit -m "Remove certificates on $(date '+%Y-%m-%d %H:%M:%S')"
             git push
           fi
