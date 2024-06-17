@@ -26,6 +26,10 @@ on:
           - ''
           - --eab
 
+permissions:
+  contents: write
+  packages: read
+
 env:
   TZ: Asia/Shanghai
 

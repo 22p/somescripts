@@ -7,6 +7,10 @@ on:
     # 每周日运行一次
     - cron: '0 0 * * 0'
 
+permissions:
+  contents: write
+  packages: read
+
 env:
   TZ: Asia/Shanghai
 
@@ -38,11 +42,8 @@ jobs:
         shell: bash
         run: |
           DOMAIN_LIST=(${{ secrets.DOMAIN_LIST }})
-          for domain_info in "${DOMAIN_LIST[@]}"; do
-            DOMAIN=$(echo $domain_info | cut -d ':' -f1)
-            DNS=$(echo $domain_info | cut -d ':' -f2)
-            ACME_SERVER=$(echo $domain_info | cut -d ':' -f3)
-            APPEND=$(echo $domain_info | cut -d ':' -f4)
+          for DOMAIN_INFO in "${DOMAIN_LIST[@]}"; do
+            IFS='_' read -r DOMAIN DNS ACME_SERVER APPEND <<< $DOMAIN_INFO
             echo "::add-mask::$DOMAIN"
             ACTION=renew
             if [ ! -f "./.lego/certificates/$DOMAIN.crt" ]; then
