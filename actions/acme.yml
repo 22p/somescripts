@@ -53,7 +53,7 @@ jobs:
             ./lego --accept-tos --email ${{ secrets.CERT_EMAIL }} \
             --dns $DNS --server ${!ACME_SERVER} \
             --domains $DOMAIN --domains *.$DOMAIN $APPEND \
-            $ACTION
+            $ACTION || true
           done
         env:
           letsencrypt: https://acme-v02.api.letsencrypt.org/directory
