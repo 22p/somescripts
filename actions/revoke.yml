@@ -78,6 +78,6 @@ jobs:
           if [ -z "$(git diff --cached)" ]; then
             echo "No changes in certificates to commit."
           else
-            git commit -m "Remove certificates on $(date '+%Y-%m-%d %H:%M:%S')"
+            git commit -m "Delete the certificates for ${{ github.event.inputs.DOMAIN }}"
             git push
           fi
