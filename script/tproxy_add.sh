@@ -20,6 +20,8 @@ elif [ "$1" = "del" ]; then
   echo "ip rule has been deleted"
   fi
 else
-  echo "未知的操作: $1"
-  echo "用法: tproxy_add.sh add|del"
+  echo "Invalid argument"
+  echo ""
+  echo "Usage: $0 [add|del]"
+  exit 1
  fi

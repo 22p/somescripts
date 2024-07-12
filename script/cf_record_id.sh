@@ -1,6 +1,15 @@
 #!/bin/bash
 
-# 用法: cf_record_id.sh ***cf_token*** home.example.com
+# Check if the argument is passed
+if [ -z "$1" ]; then
+    echo "Please provide an argument"
+    echo ""
+    echo "Usage: $0 <token> <hostname>"
+    echo -e "\ttoken - Your API token with zone permissions"
+    echo -e "\thostname - The domain name used for DDNS"
+    exit 1
+fi
+
 CF_TOKEN=$1
 # 要更新的主机名, 例如: home.example.com
 DNS=$2

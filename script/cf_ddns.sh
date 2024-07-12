@@ -1,6 +1,15 @@
 #!/bin/bash
+
+# Check if the argument is passed
+if [ -z "$1" ]; then
+    echo "Please provide an argument"
+    echo ""
+    echo "Usage: $0 <token>"
+    echo -e "\ttoken - Your API token with zone permissions"
+    exit 1
+fi
+
 FILE=/opt/script/ip_address.txt
-# 用法: cf_ddns.sh ***cf_token***
 CF_TOKEN=$1
 BARK_TOKEN=
 TG_BOT_TOKEN=
