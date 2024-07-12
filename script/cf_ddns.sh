@@ -1,15 +1,5 @@
 #!/bin/bash
 
-# Check if the argument is passed
-if [ -z "$1" ]; then
-    echo "Please provide an argument"
-    echo ""
-    echo "Usage: $0 <token>"
-    echo -e "\ttoken - Your API token with zone permissions"
-    exit 1
-fi
-
-FILE=/opt/script/ip_address.txt
 CF_TOKEN=$1
 BARK_TOKEN=
 TG_BOT_TOKEN=
@@ -19,7 +9,16 @@ CF_ZONE_ID=
 CF_RECORD_ID_A=
 CF_RECORD_ID_AAAA=
 
-OLD_IP=$(cat $FILE)
+# Check if the argument is passed
+if [ -z "$1" ]; then
+    echo "Please provide an argument"
+    echo ""
+    echo "Usage: $0 <token>"
+    echo -e "\ttoken - Your API token with zone permissions"
+    exit 1
+fi
+
+OLD_IP=$(cat /tmp/last_ip.txt 2>/dev/null)
 # 从此网卡获取IP
 NIC=ppp0
 IPv4=$(ip a s $NIC | grep global | grep -oP 'inet \K[\da-f.:]+')
@@ -27,25 +26,46 @@ IPv6=$(ip a s $NIC | grep global | grep -oP 'inet6 \K[\da-f.:]+')
 #IPv4=$(ip addr show  $NIC | grep "global $NIC" | awk '{print $2}')
 #IPv6=$(ip addr show  $NIC | grep "global dynamic" | awk '{print $2}' | cut -d'/' -f1 | sed -n '1p')
 
+# 定义更新DNS记录的函数
+update_dns_record() {
+  local record_id="$1"
+  local ip="$2"
+  local record_type="$3"
+
+    curl -s -X PUT "https://api.cloudflare.com/client/v4/zones/$CF_ZONE_ID/dns_records/$record_id" \
+    -H "Authorization: Bearer $CF_TOKEN" \
+    -H "Content-Type: application/json" \
+    --data '{"type":"'$record_type'","name":"'$DNS'","content":"'$ip'","ttl":60,"proxied":false}' | jq -r '.success'
+}
+
+# 定义更新DNS HTTPS记录的函数
+update_dns_https_record() {
+  local record_id="$1"
+  local record_type="$2"
+
+  curl -s -X PUT "https://api.cloudflare.com/client/v4/zones/$CF_ZONE_ID/dns_records/$record_id" \
+    -H "Authorization: Bearer $CF_TOKEN" \
+    -H "Content-Type: application/json" \
+    --data '{"type":"'$record_type'","name":"'$DNS'","data":{"priority": 1,"target": ".","value":"alpn=\"h3\" port=\"443\" ipv4hint=\"'$IPv4'\" ipv6hint=\"'$IPv6'\""},"ttl":1,"proxied":false}' | jq -r '.success'
+}
+
 if [ "$IPv6" != "$OLD_IP" ]
 then
-  # IPv4
-  CF_SUCCESS_A=$(curl -s -X PUT "https://api.cloudflare.com/client/v4/zones/$CF_ZONE_ID/dns_records/$CF_RECORD_ID_A" \
-    -H "Authorization: Bearer $CF_TOKEN" \
-    -H "Content-Type: application/json" \
-    --data '{"type":"A","name":"'$DNS'","content":"'$IPv4'","ttl":60,"proxied":false}' | jq -r '.success')
-  # IPv6
-  CF_SUCCESS_AAAA=$(curl -s -X PUT "https://api.cloudflare.com/client/v4/zones/$CF_ZONE_ID/dns_records/$CF_RECORD_ID_AAAA" \
-    -H "Authorization: Bearer $CF_TOKEN" \
-    -H "Content-Type: application/json" \
-    --data '{"type":"AAAA","name":"'$DNS'","content":"'$IPv6'","ttl":60,"proxied":false}' | jq -r '.success')
+  # 更新IPv4记录
+  CF_SUCCESS_A=$(update_dns_record "$CF_RECORD_ID_A" "$IPv4" "A")
+  # 更新IPv6记录
+  CF_SUCCESS_AAAA=$(update_dns_record "$CF_RECORD_ID_AAAA" "$IPv6" "AAAA")
+  # 更新HTTPS记录
+  # update_dns_https_record "$CF_RECORD_ID_HTTPS" "HTTPS"
+  # 更新SVCB记录
+  # update_dns_https_record "$CF_RECORD_ID_SVCB" "SVCB"
 
     if [ "$CF_SUCCESS_A" == "true" ] && [ "$CF_SUCCESS_AAAA" == "true" ]
     then
       echo "Renew IPv4: $IPv4, IPv6: $IPv6"
-      curl -s "https://api.day.app/$BARK_TOKEN/Renew%20IP/IPv4：$IPv4，IPv6：$IPv6?sound=minuet"
-      curl -s "https://api.telegram.org/bot$TG_BOT_TOKEN/sendMessage?chat_id=$TG_CHAT_ID&parse_mode=MarkdownV2&text=%5C%5BRenew%20IP%5C%5D%0AIPv4%3A%60$IPv4%60%0AIPv6%3A%60$IPv6%60"
-      echo $IPv6 > $FILE
+      curl -s -o /dev/null "https://api.day.app/$BARK_TOKEN/Renew%20IP/IPv4：$IPv4，IPv6：$IPv6?sound=minuet"
+      curl -s -o /dev/null "https://api.telegram.org/bot$TG_BOT_TOKEN/sendMessage?chat_id=$TG_CHAT_ID&parse_mode=MarkdownV2&text=%5C%5BRenew%20IP%5C%5D%0AIPv4%3A%60$IPv4%60%0AIPv6%3A%60$IPv6%60"
+      echo $IPv6 > /tmp/last_ip.txt
     else
       echo "Update ERROR :-C"
       exit 1
