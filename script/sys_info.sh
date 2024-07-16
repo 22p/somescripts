@@ -1,0 +1,103 @@
+#!/bin/bash
+
+# 获取系统负载
+get_load() {
+  cpucount=$(grep -c processor /proc/cpuinfo)
+  awk -v cpucount="$cpucount" '{
+      load = ($1 / cpucount) * 100
+      color = (load > 150) ? "\033[0;31m" : ((load > 100) ? "\033[0;33m" : "\033[0;32m")
+      # printf "System Load: " "%s%s%\033[0m\n", color, load
+      printf "%-13s%s%s %s %s (%s%)\033[0m\n", "System load:", color, $1, $2, $3, load
+    }' /proc/loadavg
+}
+
+# 获取系统运行时间
+get_uptime_info() {
+  awk -F. '{
+    days = int($1 / 86400)
+    hours = int(($1 % 86400) / 3600)
+    minutes = int(($1 % 3600) / 60)
+    color = (days > 14) ? "\033[0;31m" : (days >= 7) ? "\033[0;33m" : "\033[0;32m"
+    printf "%-13s%s%s days, %s hours, %s minutes\033[0m\n", "Up time:", color, days, hours, minutes
+  }' /proc/uptime
+}
+
+# 获取本地用户数量
+get_users() {
+  printf "%-13s\033[0;32m$(who | wc -l)\033[0m\n" "Users:"
+}
+
+# 获取内存使用情况
+get_mem_info() {
+  free -m | awk '
+    /Mem:/ {
+      percent = ($3 * 100) / $2
+      color = (percent > 90) ? "\033[0;31m" : ((percent > 80) ? "\033[0;33m" : "\033[0;32m")
+      printf "%-13s%s%sMiB\033[0m/%sMiB (%.2f%%)\n", "RAM usage:", color, $3, $2, percent
+    }'
+}
+
+# 获取磁盘使用情况
+get_disk_info() {
+  df -h / | awk '
+    /\// {
+    usage_percent = $5
+    sub("%", "", usage_percent)
+    color = (usage_percent > 90) ? "\033[0;31m" : ((usage_percent > 80) ? "\033[0;33m" : "\033[0;32m")
+    printf "%-13s%s%s\033[0m/%s (%s)\n", "Usage of /:", color, $3, $2, $5
+}'
+}
+
+# 获取CPU温度
+get_cpu_temp() {
+  awk '{
+  temp_c = $1 / 1000
+  temp_frac = $1 % 1000 / 100
+  color = (temp_c > 80) ? "\033[0;31m" : (temp_c >= 60) ? "\033[0;33m" : "\033[0;32m"
+  printf "%-13s%s%s.%s°C\033[0m\n", "CPU temp:", color, temp_c, temp_frac
+  }' /sys/devices/platform/coretemp.*/hwmon/hwmon*/temp1_input 2>/dev/null
+}
+
+convert_bytes() {
+  local bytes=$1
+  if [ $bytes -lt $((1 << 30)) ]; then
+    echo $(awk -v bytes=$bytes 'BEGIN {printf "%.2fMiB", bytes / (2^20)}')
+  else
+    echo $(awk -v bytes=$bytes 'BEGIN {printf "%.2fGiB", bytes / (2^30)}')
+  fi
+}
+
+# 获取接口信息
+get_iface_stats() {
+  for iface in $(ls /sys/class/net/ | grep -v lo); do
+    rx_bytes=$(cat /sys/class/net/$iface/statistics/rx_bytes)
+    tx_bytes=$(cat /sys/class/net/$iface/statistics/tx_bytes)
+
+    interfaces+=($iface)
+    rx_data+=($(convert_bytes $rx_bytes))
+    tx_data+=($(convert_bytes $tx_bytes))
+  done
+
+  printf "Interface: %s\n" "${interfaces[*]}" | xargs printf "%-13s"
+  echo ""
+  printf "TX: %s\n" "${tx_data[*]}" | xargs printf "%-13s"
+  echo ""
+  printf "RX: %s\n" "${rx_data[*]}" | xargs printf "%-13s"
+  echo ""
+}
+
+# 获取IP地址
+get_ip() {
+  printf "%-13s\033[0;35m$(hostname -I)\033[0m\n" "IP:"
+}
+
+echo "---------------------------------"
+get_load
+get_uptime_info
+get_users
+get_mem_info
+get_disk_info
+get_cpu_temp
+get_iface_stats
+get_ip
+echo "---------------------------------"
