@@ -1,5 +1,14 @@
 #!/bin/bash
 
+# 获取CPU温度
+get_cpu_temp() {
+  awk '{
+  temp = $1 / 1000
+  color = (temp > 80) ? "\033[0;31m" : (temp >= 60) ? "\033[0;33m" : "\033[0;32m"
+  printf "%-13s%s%s°C\033[0m\n", "CPU temp:", color, temp
+  }' /sys/devices/platform/coretemp.*/hwmon/hwmon*/temp1_input 2>/dev/null
+}
+
 # 获取系统负载
 get_load() {
   cpucount=$(grep -c processor /proc/cpuinfo)
@@ -7,7 +16,7 @@ get_load() {
       load = ($1 / cpucount) * 100
       color = (load > 150) ? "\033[0;31m" : ((load > 100) ? "\033[0;33m" : "\033[0;32m")
       # printf "System Load: " "%s%s%\033[0m\n", color, load
-      printf "%-13s%s%s %s %s (%s%)\033[0m\n", "System load:", color, $1, $2, $3, load
+      printf "%-13s%s%s %s %s (%s%%)\033[0m\n", "System load:", color, $1, $2, $3, load
     }' /proc/loadavg
 }
 
@@ -17,7 +26,7 @@ get_uptime_info() {
     days = int($1 / 86400)
     hours = int(($1 % 86400) / 3600)
     minutes = int(($1 % 3600) / 60)
-    color = (days > 14) ? "\033[0;31m" : (days >= 7) ? "\033[0;33m" : "\033[0;32m"
+    color = (days > 30) ? "\033[0;33m" : (days >= 15) ? "\033[0;36m" : "\033[0;32m"
     printf "%-13s%s%s days, %s hours, %s minutes\033[0m\n", "Up time:", color, days, hours, minutes
   }' /proc/uptime
 }
@@ -46,16 +55,6 @@ get_disk_info() {
     color = (usage_percent > 90) ? "\033[0;31m" : ((usage_percent > 80) ? "\033[0;33m" : "\033[0;32m")
     printf "%-13s%s%s\033[0m/%s (%s)\n", "Usage of /:", color, $3, $2, $5
 }'
-}
-
-# 获取CPU温度
-get_cpu_temp() {
-  awk '{
-  temp_c = $1 / 1000
-  temp_frac = $1 % 1000 / 100
-  color = (temp_c > 80) ? "\033[0;31m" : (temp_c >= 60) ? "\033[0;33m" : "\033[0;32m"
-  printf "%-13s%s%s.%s°C\033[0m\n", "CPU temp:", color, temp_c, temp_frac
-  }' /sys/devices/platform/coretemp.*/hwmon/hwmon*/temp1_input 2>/dev/null
 }
 
 convert_bytes() {
