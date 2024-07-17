@@ -1,14 +1,5 @@
 #!/bin/bash
 
-# 获取CPU温度
-get_cpu_temp() {
-  awk '{
-  temp = $1 / 1000
-  color = (temp > 80) ? "\033[0;31m" : (temp >= 60) ? "\033[0;33m" : "\033[0;32m"
-  printf "%-13s%s%s°C\033[0m\n", "CPU temp:", color, temp
-  }' /sys/devices/platform/coretemp.*/hwmon/hwmon*/temp1_input 2>/dev/null
-}
-
 # 获取系统负载
 get_load() {
   cpucount=$(grep -c processor /proc/cpuinfo)
@@ -57,6 +48,15 @@ get_disk_info() {
 }'
 }
 
+# 获取CPU温度
+get_cpu_temp() {
+  awk '{
+  temp = $1 / 1000
+  color = (temp > 80) ? "\033[0;31m" : (temp >= 60) ? "\033[0;33m" : "\033[0;32m"
+  printf "%-13s%s%s°C\033[0m\n", "CPU temp:", color, temp
+  }' /sys/devices/platform/coretemp.*/hwmon/hwmon*/temp1_input 2>/dev/null
+}
+
 convert_bytes() {
   local bytes=$1
   if [ $bytes -lt $((1 << 30)) ]; then
@@ -68,7 +68,7 @@ convert_bytes() {
 
 # 获取接口信息
 get_iface_stats() {
-  for iface in $(ls /sys/class/net/ | grep -v lo); do
+  for iface in $(ls /sys/class/net/ | grep -Ev "lo|bonding_masters"); do
     rx_bytes=$(cat /sys/class/net/$iface/statistics/rx_bytes)
     tx_bytes=$(cat /sys/class/net/$iface/statistics/tx_bytes)
 
@@ -87,7 +87,25 @@ get_iface_stats() {
 
 # 获取IP地址
 get_ip() {
-  printf "%-13s\033[0;35m$(hostname -I)\033[0m\n" "IP:"
+  local ip_addresses=()
+  local ip_address
+
+  ip_address=$(ip -4 addr show scope global 2>/dev/null | grep inet | awk '{print $2}' | cut -d/ -f1)
+  if [ -n "$ip_address" ]; then
+    ip_addresses+=($ip_address)
+  fi
+
+  ip_address=$(ifconfig 2>/dev/null | grep -w inet | awk '{print $2}' | cut -d: -f2 | grep -v '127.0.0.1')
+  if [ -n "$ip_address" ]; then
+    ip_addresses+=($ip_address)
+  fi
+
+  #ip_address=$(hostname -I 2>/dev/null)
+  #if [ -n "$ip_address" ]; then
+  #ip_addresses+=($ip_address)
+  #fi
+  unique_ip_addresses=$(echo "${ip_addresses[@]}" | tr ' ' '\n' | sort -u | tr '\n' ' ')
+  printf "%-13s\033[0;35m%s\033[0m\n" "IP:" "$unique_ip_addresses"
 }
 
 echo "---------------------------------"
