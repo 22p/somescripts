@@ -21,10 +21,10 @@ fi
 OLD_IP=$(cat /tmp/last_ip.txt 2>/dev/null)
 # 从此网卡获取IP
 NIC=ppp0
-IPv4=$(ip a s $NIC | grep global | grep -oP 'inet \K[\da-f.:]+')
-IPv6=$(ip a s $NIC | grep global | grep -oP 'inet6 \K[\da-f.:]+')
-#IPv4=$(ip addr show  $NIC | grep "global $NIC" | awk '{print $2}')
-#IPv6=$(ip addr show  $NIC | grep "global dynamic" | awk '{print $2}' | cut -d'/' -f1 | sed -n '1p')
+IPv4=$(ip addr show $NIC scope global | grep -oP 'inet \K[\da-f.:]+')
+IPv6=$(ip addr show $NIC scope global | grep -oP 'inet6 \K[\da-f.:]+')
+#IPv4=$(ip -4 addr show $NIC scope global | grep inet | awk '{print $2}' | cut -d'/' -f1)
+#IPv6=$(ip -6 addr show $NIC scope global | grep inet | awk '{print $2}' | cut -d'/' -f1)
 
 # 定义更新DNS记录的函数
 update_dns_record() {
