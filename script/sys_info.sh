@@ -6,8 +6,7 @@ get_load() {
   awk -v cpucount="$cpucount" '{
       load = ($1 / cpucount) * 100
       color = (load > 150) ? "\033[0;31m" : ((load > 100) ? "\033[0;33m" : "\033[0;32m")
-      # printf "System Load: " "%s%s%\033[0m\n", color, load
-      printf "%-13s%s%s %s %s (%s%%)\033[0m\n", "System load:", color, $1, $2, $3, load
+      printf "%-13s%s%s %s %s (%s%%)\033[0m\n", "System load", color, $1, $2, $3, load
     }' /proc/loadavg
 }
 
@@ -18,13 +17,13 @@ get_uptime_info() {
     hours = int(($1 % 86400) / 3600)
     minutes = int(($1 % 3600) / 60)
     color = (days > 30) ? "\033[0;33m" : (days >= 15) ? "\033[0;36m" : "\033[0;32m"
-    printf "%-13s%s%s days, %s hours, %s minutes\033[0m\n", "Up time:", color, days, hours, minutes
+    printf "%-13s%s%s days, %s hours, %s minutes\033[0m\n", "Up time", color, days, hours, minutes
   }' /proc/uptime
 }
 
 # 获取本地用户数量
-get_users() {
-  printf "%-13s\033[0;32m$(who | wc -l)\033[0m\n" "Users:"
+get_login_users() {
+  printf "%-13s\033[0;32m$(who | wc -l)\033[0m\n" "Login users"
 }
 
 # 获取内存使用情况
@@ -33,18 +32,17 @@ get_mem_info() {
     /Mem:/ {
       percent = ($3 * 100) / $2
       color = (percent > 90) ? "\033[0;31m" : ((percent > 80) ? "\033[0;33m" : "\033[0;32m")
-      printf "%-13s%s%sMiB\033[0m/%sMiB (%.2f%%)\n", "RAM usage:", color, $3, $2, percent
+      printf "%-13s%s%sMiB\033[0m/%sMiB (%.2f%%)\n", "RAM usage", color, $3, $2, percent
     }'
 }
 
 # 获取磁盘使用情况
 get_disk_info() {
-  df -h / | awk '
-    /\// {
-    usage_percent = $5
-    sub("%", "", usage_percent)
-    color = (usage_percent > 90) ? "\033[0;31m" : ((usage_percent > 80) ? "\033[0;33m" : "\033[0;32m")
-    printf "%-13s%s%s\033[0m/%s (%s)\n", "Usage of /:", color, $3, $2, $5
+df -h | awk '
+  /^\/dev/{
+    use = substr($5, 1, length($5)-1)
+    color = (use > 90) ? "\033[0;31m" : ((use > 80) ? "\033[0;33m" : "\033[0;32m")
+    printf "%-13s%s%s/\033[0m%s (%s)\n", $6, color, $3, $4, $5
 }'
 }
 
@@ -53,7 +51,7 @@ get_cpu_temp() {
   awk '{
   temp = $1 / 1000
   color = (temp > 80) ? "\033[0;31m" : (temp >= 60) ? "\033[0;33m" : "\033[0;32m"
-  printf "%-13s%s%s°C\033[0m\n", "CPU temp:", color, temp
+  printf "%-13s%s%s°C\033[0m\n", "CPU temp", color, temp
   }' /sys/devices/platform/coretemp.*/hwmon/hwmon*/temp1_input 2>/dev/null
 }
 
@@ -77,11 +75,11 @@ get_iface_stats() {
     tx_data+=($(convert_bytes $tx_bytes))
   done
 
-  printf "Interface: %s\n" "${interfaces[*]}" | xargs printf "%-13s"
+  printf "Interface %s\n" "${interfaces[*]}" | xargs printf "%-13s"
   echo ""
-  printf "TX: %s\n" "${tx_data[*]}" | xargs printf "%-13s"
+  printf "TX %s\n" "${tx_data[*]}" | xargs printf "%-13s"
   echo ""
-  printf "RX: %s\n" "${rx_data[*]}" | xargs printf "%-13s"
+  printf "RX %s\n" "${rx_data[*]}" | xargs printf "%-13s"
   echo ""
 }
 
@@ -105,16 +103,21 @@ get_ip() {
   #ip_addresses+=($ip_address)
   #fi
   unique_ip_addresses=$(echo "${ip_addresses[@]}" | tr ' ' '\n' | sort -u | tr '\n' ' ')
-  printf "%-13s\033[0;35m%s\033[0m\n" "IP:" "$unique_ip_addresses"
+  printf "%-13s\033[0;35m%s\033[0m\n" "IP" "$unique_ip_addresses"
 }
 
-echo "---------------------------------"
+line1="---------------------------------"
+echo -e "\nSystem Information:"
+echo $line1
 get_load
 get_uptime_info
-get_users
+get_login_users
 get_mem_info
-get_disk_info
 get_cpu_temp
+echo -e "\nMount Point Information:"
+echo $line1
+get_disk_info
+echo -e "\nNetwork Information:"
+echo $line1
 get_iface_stats
 get_ip
-echo "---------------------------------"
