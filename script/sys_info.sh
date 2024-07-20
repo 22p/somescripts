@@ -42,7 +42,7 @@ df -h | awk '
   /^\/dev/{
     use = substr($5, 1, length($5)-1)
     color = (use > 90) ? "\033[0;31m" : ((use > 80) ? "\033[0;33m" : "\033[0;32m")
-    printf "%-13s%s%s/\033[0m%s (%s)\n", $6, color, $3, $4, $5
+    printf "%-13s%s%s/\033[0m%s (%s)\n", $6, color, $3, $2, $5
 }'
 }
 
