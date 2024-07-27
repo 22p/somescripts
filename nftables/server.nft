@@ -3,13 +3,21 @@
 flush ruleset
 
 define DEV_WG = wg0
-define SSH_ALLOWED_IPS = { 0.0.0.0/0 }
-define SSH_ALLOWED_IP6S = { ::/0 }
 define BLOCKED_IP_RANGES = { 192.0.2.0/24, 198.51.100.0/24 }
 define BLOCKED_IP6_RANGES = { 2001:db8::/32, 2001:db8:1234::/48 }
 
 
 table inet server {
+
+	set ssh_brute_force_block {
+		type ipv4_addr
+		timeout 2h
+	}
+
+	set ssh_brute_force_block_v6 {
+		type ipv6_addr
+		timeout 2h
+	}
 
 	# 处理入站流量
 	chain inbound {
@@ -19,20 +27,22 @@ table inet server {
 		iifname $DEV_WG counter accept
 		ct state established,related accept
 
+		# 跳转到封禁 IP 范围的链
+		jump drop_ip_ranges
+
 		# 允许特定的 ICMP 类型（IPv4 和 IPv6）
 		meta nfproto ipv4 icmp type 8 counter accept
 		meta nfproto ipv6 icmpv6 type { 128, 129 } counter accept
 
-		# 允许来自特定 IP 范围的 SSH 流量
-		ip saddr $SSH_ALLOWED_IPS tcp dport 22 counter accept
-		ip6 saddr $SSH_ALLOWED_IP6S tcp dport 22 counter accept
+		# 限制新SSH连接的频率，并自动封禁
+		meta nfproto ipv4 tcp dport 22 ct state new limit rate 5/minute accept
+		meta nfproto ipv6 tcp dport 22 ct state new limit rate 5/minute accept
+		meta nfproto ipv4 tcp dport 22 add @ssh_brute_force_block { ip saddr } drop
+		meta nfproto ipv6 tcp dport 22 add @ssh_brute_force_block_v6 { ip6 saddr } drop
 
 		udp dport 51820 counter accept # Allow-WireGuard
 		tcp dport { 80, 443 } counter accept # Allow-HTTP-and-HTTPS
 		udp dport 443 counter accept # Allow-UDP-443
-
-		# 跳转到封禁 IP 范围的链
-		jump drop_ip_ranges
 	}
 
 	# 处理出站流量
@@ -47,7 +57,9 @@ table inet server {
 
 	# 丢弃来自特定 IP 范围的流量
 	chain drop_ip_ranges {
-		ip saddr $BLOCKED_IP_RANGES counter drop
-		ip6 saddr $BLOCKED_IP6_RANGES counter drop
+		ip saddr @ssh_brute_force_block drop
+		ip6 saddr @ssh_brute_force_block_v6 drop
+		ip saddr $BLOCKED_IP_RANGES drop
+		ip6 saddr $BLOCKED_IP6_RANGES drop
 	}
 }
