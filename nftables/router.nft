@@ -57,7 +57,7 @@ table inet router {
 		iifname $DEV_WORLD counter jump handle_reject
 	}
 
-    chain forward {
+	chain forward {
 		type filter hook forward priority filter; policy drop;
 
 		meta l4proto { tcp, udp } flow offload @ft;
