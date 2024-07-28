@@ -9,6 +9,15 @@ define BLOCKED_IP6_RANGES = { 2001:db8::/32, 2001:db8:1234::/48 }
 
 table inet server {
 
+	set ssh_ratelimit {
+		type ipv4_addr
+		timeout 1m
+	}
+
+	set ssh_ratelimit_v6 {
+		type ipv6_addr
+		timeout 1m
+	}
 	set ssh_brute_force_block {
 		type ipv4_addr
 		timeout 2h
@@ -24,21 +33,25 @@ table inet server {
 		type filter hook input priority filter; policy drop;
 
 		iifname "lo" accept
-		iifname $DEV_WG counter accept
+		iifname $DEV_WG accept
 		ct state established,related accept
+
+		# 丢弃无效的连接状态
+		ct state invalid counter drop
 
 		# 跳转到封禁 IP 范围的链
 		jump drop_ip_ranges
 
 		# 允许特定的 ICMP 类型（IPv4 和 IPv6）
-		meta nfproto ipv4 icmp type 8 counter accept
-		meta nfproto ipv6 icmpv6 type { 128, 129 } counter accept
+		meta nfproto ipv6 icmpv6 type { nd-neighbor-solicit, nd-router-advert, nd-neighbor-advert } accept
+		meta nfproto ipv4 icmp type echo-request limit rate 5/second accept
+		meta nfproto ipv6 icmpv6 type echo-request limit rate 5/second accept
 
 		# 限制新SSH连接的频率，并自动封禁
-		meta nfproto ipv4 tcp dport 22 ct state new limit rate 5/minute accept
-		meta nfproto ipv6 tcp dport 22 ct state new limit rate 5/minute accept
-		meta nfproto ipv4 tcp dport 22 add @ssh_brute_force_block { ip saddr } drop
-		meta nfproto ipv6 tcp dport 22 add @ssh_brute_force_block_v6 { ip6 saddr } drop
+		ct state new ip protocol tcp tcp dport 22 update @ssh_ratelimit { ip saddr limit rate 2/minute burst 3 packets } accept
+		ct state new ip6 nexthdr tcp tcp dport 22 update @ssh_ratelimit_v6 { ip6 saddr limit rate 2/minute burst 3 packets } accept
+		ip protocol tcp tcp dport 22 add @ssh_brute_force_block { ip saddr }
+		ip6 nexthdr tcp dport 22 add @ssh_brute_force_block_v6 { ip6 saddr }
 
 		udp dport 51820 counter accept # Allow-WireGuard
 		tcp dport { 80, 443 } counter accept # Allow-HTTP-and-HTTPS
@@ -52,7 +65,7 @@ table inet server {
 		oifname "lo" accept
 		ct state established,related accept
 		# 丢弃无效的连接状态
-		meta nfproto ipv4 ct state invalid counter drop
+		ct state invalid counter drop
 	}
 
 	# 丢弃来自特定 IP 范围的流量
