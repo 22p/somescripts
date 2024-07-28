@@ -42,10 +42,15 @@ table inet server {
 		# 跳转到封禁 IP 范围的链
 		jump drop_ip_ranges
 
+		meta nfproto ipv4 meta l4proto igmp counter accept # Allow-IGMP
+		meta nfproto ipv4 udp dport 68 counter accept # Allow-DHCP-Renew
+		meta nfproto ipv6 udp dport 546 accept # Allow-DHCPv6
+
 		# 允许特定的 ICMP 类型（IPv4 和 IPv6）
-		meta nfproto ipv6 icmpv6 type { nd-neighbor-solicit, nd-router-advert, nd-neighbor-advert } accept
-		meta nfproto ipv4 icmp type echo-request limit rate 5/second accept
-		meta nfproto ipv6 icmpv6 type echo-request limit rate 5/second accept
+		icmpv6 type { 129, 1, 3, 133, 134, 135, 136 } accept # Allow-ICMPv6-Input
+		icmpv6 type { 130, 131, 132, 143 } accept # Allow-MLD
+		icmp type 8 limit rate 5/second accept # Allow-Ping
+		icmpv6 type 128 limit rate 5/second accept # Allow-Ping6
 
 		# 限制新SSH连接的频率，并自动封禁
 		ct state new ip protocol tcp tcp dport 22 update @ssh_ratelimit { ip saddr limit rate 2/minute burst 3 packets } accept
