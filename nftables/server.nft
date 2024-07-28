@@ -51,7 +51,7 @@ table inet server {
 		ct state new ip protocol tcp tcp dport 22 update @ssh_ratelimit { ip saddr limit rate 2/minute burst 3 packets } accept
 		ct state new ip6 nexthdr tcp tcp dport 22 update @ssh_ratelimit_v6 { ip6 saddr limit rate 2/minute burst 3 packets } accept
 		ip protocol tcp tcp dport 22 add @ssh_brute_force_block { ip saddr }
-		ip6 nexthdr tcp dport 22 add @ssh_brute_force_block_v6 { ip6 saddr }
+		ip6 nexthdr tcp tcp dport 22 add @ssh_brute_force_block_v6 { ip6 saddr }
 
 		udp dport 51820 counter accept # Allow-WireGuard
 		tcp dport { 80, 443 } counter accept # Allow-HTTP-and-HTTPS
