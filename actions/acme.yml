@@ -4,7 +4,7 @@ name: acme ssl automation
 on:
   workflow_dispatch:
   schedule:
-    # 每周日运行一次
+    # 每周六运行一次
     - cron: '0 0 * * 6'
 
 permissions:
@@ -53,7 +53,7 @@ jobs:
             ./lego --accept-tos --email ${{ secrets.CERT_EMAIL }} \
             --dns $DNS --server ${!ACME_SERVER} \
             --domains $DOMAIN --domains *.$DOMAIN $APPEND \
-            $ACTION || true
+            $ACTION
           done
         env:
           letsencrypt: https://acme-v02.api.letsencrypt.org/directory
