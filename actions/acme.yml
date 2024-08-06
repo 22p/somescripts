@@ -59,6 +59,7 @@ jobs:
           letsencrypt: https://acme-v02.api.letsencrypt.org/directory
           zerossl: https://acme.zerossl.com/v2/DV90
           google: https://dv.acme-v02.api.pki.goog/directory
+        continue-on-error: true
 
       - name: Push Certificates to GitHub
         run: |
@@ -72,3 +73,8 @@ jobs:
             git commit -m "Upload certificates on $(date '+%Y-%m-%d %H:%M:%S')"
             git push
           fi
+
+      - name: Send failure notification
+        if: failure()
+        run: |
+          curl -s -o /dev/null "https://api.day.app/${{ secrets.BARK_TOKEN }}/SSL%20Automation%20Failed/SSL%20automation%20has%20failed%20at%20$(date "+%Y-%m-%d%%20%H:%M:%S%%20%Z")?sound=minuet"
