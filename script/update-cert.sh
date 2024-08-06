@@ -1,6 +1,7 @@
 #!/bin/sh
 
 GITHUB_TOKEN="github_pat_"
+BARK_TOKEN=""
 REPO_PATH=""
 DOMAIN_NAME=""
 CERTIFICATE_FILE="/opt/podman/cert/$DOMAIN_NAME.crt"
@@ -27,6 +28,8 @@ NEW_HASH=$(sha256sum $CERTIFICATE_FILE 2>/dev/null)
 
 if ! grep -q "BEGIN CERTIFICATE" $CERTIFICATE_FILE 2>/dev/null; then
   echo -e "\033[31m证书文件错误，请检查。\033[0m"
+  # 发送失败通知到Bark
+  curl -s -o /dev/null "https://api.day.app/$BARK_TOKEN/SSL%20Download%20Failed/SSL%20download%20has%20failed%20at%20$(date "+%Y-%m-%d%%20%H:%M:%S%%20%Z")?sound=update"
   exit 1
 fi
 
