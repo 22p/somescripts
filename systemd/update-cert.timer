@@ -2,10 +2,8 @@
 Description=Run Update-cert script
 
 [Timer]
-# 每个星期天的凌晨2点运行任务
-OnCalendar=Sun *-*-* 02:00:00 UTC
-# 每个月的2号凌晨2点运行任务
-# OnCalendar=*-02 02:00:00 UTC
+# 每个星期日/星期三的凌晨2点运行任务
+OnCalendar=Sun,Wed *-*-* 02:00:00 UTC
 AccuracySec=1h
 Persistent=true
 Unit=update-cert.service

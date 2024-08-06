@@ -1,27 +1,40 @@
 #!/bin/sh
 
-CERT_DIR=/opt/podman/cert
-DNS=
-GITHUB_TOKEN=
-REPOS=
+GITHUB_TOKEN="github_pat_"
+REPO_PATH=""
+DOMAIN_NAME=""
+CERTIFICATE_FILE="/opt/podman/cert/$DOMAIN_NAME.crt"
+CERTIFICATE_KEY_FILE="/opt/podman/cert/$DOMAIN_NAME.key"
+RELOAD_CMD="podman exec -it nginx nginx -s reload"
+
+# 获取当前证书哈希值
+OLD_HASH=$(sha256sum $CERTIFICATE_FILE 2>/dev/null)
 
 # 从 GitHub 私有仓库下载证书
 curl -s -L \
   -H "Accept: application/vnd.github.raw+json" \
   -H "Authorization: Bearer $GITHUB_TOKEN" \
   -H "X-GitHub-Api-Version: 2022-11-28" \
-  https://api.github.com/repos/$REPOS/contents/certificates/$DNS.crt?ref=main -o $CERT_DIR/$DNS.crt
+  https://api.github.com/repos/$REPO_PATH/contents/certificates/$DOMAIN_NAME.crt?ref=main -o $CERTIFICATE_FILE
 curl -s -L \
   -H "Accept: application/vnd.github.raw+json" \
   -H "Authorization: Bearer $GITHUB_TOKEN" \
   -H "X-GitHub-Api-Version: 2022-11-28" \
-  https://api.github.com/repos/$REPOS/contents/certificates/$DNS.key?ref=main -o $CERT_DIR/$DNS.key
+  https://api.github.com/repos/$REPO_PATH/contents/certificates/$DOMAIN_NAME.key?ref=main -o $CERTIFICATE_KEY_FILE
 
-if grep -q "BEGIN CERTIFICATE" $CERT_DIR/$DNS.crt; then
-  # 重新加载Nginx配置文件
-  podman exec -it nginx nginx -s reload
-  echo "已下载"
-else
-  echo -e "\033[31m没有找到证书，请检查Git仓库。\033[0m"
+# 获取新哈希值
+NEW_HASH=$(sha256sum $CERTIFICATE_FILE 2>/dev/null)
+
+if ! grep -q "BEGIN CERTIFICATE" $CERTIFICATE_FILE 2>/dev/null; then
+  echo -e "\033[31m证书文件错误，请检查。\033[0m"
   exit 1
+fi
+
+if [ "$OLD_HASH" != "$NEW_HASH" ]; then
+  echo "已下载 重新加载服务"
+  $RELOAD_CMD
+  exit 0
+else
+  echo "证书未变动"
+  exit 0
 fi
