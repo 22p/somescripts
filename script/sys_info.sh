@@ -85,25 +85,16 @@ get_iface_stats() {
 
 # 获取IP地址
 get_ip() {
-  local ip_addresses=()
   local ip_address
+  local ip6_address
 
-  ip_address=$(ip -4 addr show scope global 2>/dev/null | grep inet | awk '{print $2}' | cut -d/ -f1)
-  if [ -n "$ip_address" ]; then
-    ip_addresses+=($ip_address)
-  fi
+  ip_address=$(ip -4 addr show scope global 2>/dev/null | grep inet | awk '{print $2}' | cut -d/ -f1 | xargs)
 
-  ip_address=$(ifconfig 2>/dev/null | grep -w inet | awk '{print $2}' | cut -d: -f2 | grep -v '127.0.0.1')
-  if [ -n "$ip_address" ]; then
-    ip_addresses+=($ip_address)
-  fi
+  printf "%-13s\033[0;35m%s\033[0m\n" "IPv4" "$ip_address"
 
-  #ip_address=$(hostname -I 2>/dev/null)
-  #if [ -n "$ip_address" ]; then
-  #ip_addresses+=($ip_address)
-  #fi
-  unique_ip_addresses=$(echo "${ip_addresses[@]}" | tr ' ' '\n' | sort -u | tr '\n' ' ')
-  printf "%-13s\033[0;35m%s\033[0m\n" "IP" "$unique_ip_addresses"
+  ip6_address=$(ip -6 addr show scope global 2>/dev/null | grep inet | awk '{print $2}' | cut -d/ -f1 | xargs)
+
+  printf "%-13s\033[0;35m%s\033[0m\n" "IPv6" "$ip6_address"
 }
 
 line1="---------------------------------"
