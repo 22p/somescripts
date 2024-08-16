@@ -1,5 +1,6 @@
 #!/bin/bash
 
+SRV_NAME="Q"
 CF_TOKEN=$1
 BARK_TOKEN=
 TG_BOT_TOKEN=
@@ -85,14 +86,14 @@ if [ "$IPv6" != "$OLD_IP" ]; then
 
   if [ "$CF_SUCCESS_A" == "true" ] && [ "$CF_SUCCESS_AAAA" == "true" ]; then
     echo "Renew IPv4: $IPv4, IPv6: $IPv6"
-    send_bark_notification "[Renew IP][Q]" "IPv4：$IPv4，IPv6：$IPv6" "Q" minuet
-    send_telegram_notification "\[Renew IP\]\[Q\]" "IPv4: \`$IPv4\`
+    send_bark_notification "[Renew IP][$SRV_NAME]" "IPv4：$IPv4，IPv6：$IPv6" "$SRV_NAME" minuet
+    send_telegram_notification "\[Renew IP\]\[$SRV_NAME\]" "IPv4: \`$IPv4\`
 IPv6 \`$IPv6\`"
     echo $IPv6 >/tmp/last_ip.txt
   else
     echo "Update ERROR :-C"
-    send_bark_notification "[Renew IP][Q]" "Update ERROR" "Q" minuet
-    send_telegram_notification "\[Renew IP\]\[Q\]" "Update ERROR"
+    send_bark_notification "[Renew IP][$SRV_NAME]" "Update ERROR" "$SRV_NAME" minuet
+    send_telegram_notification "\[Renew IP\]\[$SRV_NAME\]" "Update ERROR"
     exit 1
   fi
 else
