@@ -11,12 +11,36 @@ CF_RECORD_ID_AAAA=
 
 # Check if the argument is passed
 if [ -z "$1" ]; then
-    echo "Please provide an argument"
-    echo ""
-    echo "Usage: $0 <token>"
-    echo -e "\ttoken - Your API token with zone permissions"
-    exit 1
+  echo "Please provide an argument"
+  echo ""
+  echo "Usage: $0 <token>"
+  echo -e "\ttoken - Your API token with zone permissions"
+  exit 1
 fi
+
+# 将输入的字符串进行 URL 编码
+url_encode() {
+  jq -nr --arg v "$1" '$v|@uri'
+}
+
+# 定义发送 Bark 通知的函数
+# send_bark_notification "标题" "内容" "消息分组" "通知铃声"
+send_bark_notification() {
+  local title=$(url_encode "$1")
+  local message=$(url_encode "$2")
+  local group=$(url_encode "$3")
+  local sound=$4
+  curl -s -o /dev/null "https://api.day.app/$BARK_TOKEN/$title/$message?group=$group&sound=$sound"
+}
+
+# 定义发送 Telegram 通知的函数
+# https://core.telegram.org/bots/api#markdownv2-style
+# send_telegram_notification "标题" "内容"
+send_telegram_notification() {
+  local title=$(url_encode "$1")
+  local message=$(url_encode "$2")
+  curl -s -o /dev/null "https://api.telegram.org/bot$TG_BOT_TOKEN/sendMessage?chat_id=$TG_CHAT_ID&parse_mode=MarkdownV2&text=%2A$title%2A%0A$message"
+}
 
 OLD_IP=$(cat /tmp/last_ip.txt 2>/dev/null)
 # 从此网卡获取IP
@@ -32,7 +56,7 @@ update_dns_record() {
   local ip="$2"
   local record_type="$3"
 
-    curl -s -X PUT "https://api.cloudflare.com/client/v4/zones/$CF_ZONE_ID/dns_records/$record_id" \
+  curl -s -X PUT "https://api.cloudflare.com/client/v4/zones/$CF_ZONE_ID/dns_records/$record_id" \
     -H "Authorization: Bearer $CF_TOKEN" \
     -H "Content-Type: application/json" \
     --data '{"type":"'$record_type'","name":"'$DNS'","content":"'$ip'","ttl":60,"proxied":false}' | jq -r '.success'
@@ -49,8 +73,7 @@ update_dns_https_record() {
     --data '{"type":"'$record_type'","name":"'$DNS'","data":{"priority": 1,"target": ".","value":"alpn=\"h3\" port=\"443\" ipv4hint=\"'$IPv4'\" ipv6hint=\"'$IPv6'\""},"ttl":1,"proxied":false}' | jq -r '.success'
 }
 
-if [ "$IPv6" != "$OLD_IP" ]
-then
+if [ "$IPv6" != "$OLD_IP" ]; then
   # 更新IPv4记录
   CF_SUCCESS_A=$(update_dns_record "$CF_RECORD_ID_A" "$IPv4" "A")
   # 更新IPv6记录
@@ -60,16 +83,18 @@ then
   # 更新SVCB记录
   # update_dns_https_record "$CF_RECORD_ID_SVCB" "SVCB"
 
-    if [ "$CF_SUCCESS_A" == "true" ] && [ "$CF_SUCCESS_AAAA" == "true" ]
-    then
-      echo "Renew IPv4: $IPv4, IPv6: $IPv6"
-      curl -s -o /dev/null "https://api.day.app/$BARK_TOKEN/Renew%20IP/IPv4：$IPv4，IPv6：$IPv6?sound=minuet"
-      curl -s -o /dev/null "https://api.telegram.org/bot$TG_BOT_TOKEN/sendMessage?chat_id=$TG_CHAT_ID&parse_mode=MarkdownV2&text=%5C%5BRenew%20IP%5C%5D%0AIPv4%3A%60$IPv4%60%0AIPv6%3A%60$IPv6%60"
-      echo $IPv6 > /tmp/last_ip.txt
-    else
-      echo "Update ERROR :-C"
-      exit 1
-    fi
+  if [ "$CF_SUCCESS_A" == "true" ] && [ "$CF_SUCCESS_AAAA" == "true" ]; then
+    echo "Renew IPv4: $IPv4, IPv6: $IPv6"
+    send_bark_notification "[Renew IP][Q]" "IPv4：$IPv4，IPv6：$IPv6" "Q" minuet
+    send_telegram_notification "\[Renew IP\]\[Q\]" "IPv4: \`$IPv4\`
+IPv6 \`$IPv6\`"
+    echo $IPv6 >/tmp/last_ip.txt
+  else
+    echo "Update ERROR :-C"
+    send_bark_notification "[Renew IP][Q]" "Update ERROR" "Q" minuet
+    send_telegram_notification "\[Renew IP\]\[Q\]" "Update ERROR"
+    exit 1
+  fi
 else
   echo "No change"
 fi
