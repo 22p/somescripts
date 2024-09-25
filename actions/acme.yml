@@ -45,9 +45,9 @@ jobs:
           for DOMAIN_INFO in "${DOMAIN_LIST[@]}"; do
             IFS='_' read -r DOMAIN DNS ACME_SERVER APPEND <<< $DOMAIN_INFO
             echo "::add-mask::$DOMAIN"
-            ACTION=renew
+            ACTION="renew  --no-random-sleep"
             if [ ! -f "./.lego/certificates/$DOMAIN.crt" ]; then
-              ACTION=run
+              ACTION="run"
             fi
             ${{ secrets.DNS_API }}
             ./lego --accept-tos --email ${{ secrets.CERT_EMAIL }} \
