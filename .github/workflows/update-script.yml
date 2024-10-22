@@ -5,6 +5,10 @@ on:
   schedule:
     - cron: "0 0 */30 * *"  # 每 30 天的 00:00 触发
 
+permissions:
+  contents: write
+  packages: read
+
 jobs:
   run-script:
     runs-on: ubuntu-latest
