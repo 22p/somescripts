@@ -40,12 +40,16 @@
         "outbound": "proxy"
       },
       {
-        "rule_set": "geosite-category-ads-all",
+        "rule_set": [
+          "geosite-category-ads-all"
+        ],
         "outbound": "block"
       },
       {
-        "rule_set": "geosite-geolocation-cn",
-        "rule_set": "geoip-cn",
+        "rule_set": [
+          "geosite-geolocation-cn",
+          "geoip-cn"
+        ],
         "outbound": "direct"
       },
       {
@@ -66,6 +70,13 @@
         "tag": "geosite-geolocation-cn",
         "format": "binary",
         "url": "https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-geolocation-cn.srs",
+        "download_detour": "proxy"
+      },
+      {
+        "type": "remote",
+        "tag": "accelerated-domains-china",
+        "format": "binary",
+        "url": "https://raw.githubusercontent.com/22p/somescripts/main/AdGuardHome/accelerated-domains.china.srs",
         "download_detour": "proxy"
       },
       {

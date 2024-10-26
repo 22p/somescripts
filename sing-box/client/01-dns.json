@@ -32,7 +32,10 @@
         "server": "dns_proxy"
       },
       {
-        "rule_set": "geosite-geolocation-cn",
+        "rule_set": [
+          "geosite-geolocation-cn",
+          "accelerated-domains-china"
+        ],
         "server": "dns_direct"
       }
     ]
