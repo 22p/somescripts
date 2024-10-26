@@ -44,7 +44,7 @@ echo '{
 }' > accelerated-domains.china.json
 
 # sing-box rule-set compile --output ./accelerated-domains.china.srs ./accelerated-domains.china.json
-docker run --rm -v "$(pwd)":/conf ghcr.io/sagernet/sing-box:latest rule-set compile --output /conf/accelerated-domains.china.srs /conf/accelerated-domains.china.conf
+docker run --rm -v "$(pwd)":/conf ghcr.io/sagernet/sing-box:latest rule-set compile --output /conf/accelerated-domains.china.srs /conf/accelerated-domains.china.json
 
 sed -i \
     -e 's/server=\/\(.*\)\//\[\/\1\/\]/g' \
