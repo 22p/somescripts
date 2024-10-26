@@ -31,12 +31,20 @@ popd >/dev/null
 pushd ../AdGuardHome >/dev/null || exit
 curl -sLO https://raw.githubusercontent.com/felixonmars/dnsmasq-china-list/master/accelerated-domains.china.conf
 
-sed \
-    -e 's/server=\/\(.*\)\//\/\1\//g' \
-    -e 's/114\.114\.114\.114//g' \
-    accelerated-domains.china.conf >accelerated-domains.china.sing-box.conf
-docker run --rm -v "$(pwd)":/conf ghcr.io/sagernet/sing-box:latest rule-set convert --type adguard --output /conf/accelerated-domains.china.srs /conf/accelerated-domains.china.sing-box.conf
-rm -f accelerated-domains.china.sing-box.conf
+domains=$(awk -F'/' '{print "\""$2"\""}' accelerated-domains.china.conf | paste -sd "," -)
+echo '{
+  "version": 1,
+  "rules": [
+    {
+      "domain_suffix": [
+        '"$domains"'
+      ]
+    }
+  ]
+}' > accelerated-domains.china.json
+
+# sing-box rule-set compile --output ./accelerated-domains.china.srs ./accelerated-domains.china.json
+docker run --rm -v "$(pwd)":/conf ghcr.io/sagernet/sing-box:latest rule-set compile --output /conf/accelerated-domains.china.srs /conf/accelerated-domains.china.conf
 
 sed -i \
     -e 's/server=\/\(.*\)\//\[\/\1\/\]/g' \
