@@ -15,6 +15,7 @@ Network=none
 [Service]
 Restart=always
 TimeoutStartSec=900
+ExecStartPre=/usr/bin/rm -f /opt/podman/socket/filebrowser/filebrowser.socket
 
 [Install]
 WantedBy=multi-user.target default.target

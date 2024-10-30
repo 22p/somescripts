@@ -12,6 +12,7 @@ PublishPort=192.168.168.1:5244:5244
 [Service]
 Restart=always
 TimeoutStartSec=900
+ExecStartPre=/usr/bin/rm -f /opt/podman/socket/alist/alist.socket
 
 [Install]
 WantedBy=multi-user.target default.target

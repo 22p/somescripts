@@ -1,0 +1,16 @@
+[Unit]
+Description=Cloudreve Redis Quadlet
+
+[Container]
+Image=docker.io/library/redis:alpine
+ContainerName=cloudreve-redis
+AutoUpdate=registry
+Network=cloudreve.network
+IP=172.16.0.4
+
+[Service]
+Restart=always
+TimeoutStartSec=900
+
+[Install]
+WantedBy=multi-user.target default.target

@@ -1,0 +1,24 @@
+[Unit]
+Description=Cloudreve Quadlet
+
+[Container]
+Image=docker.io/cloudreve/cloudreve:latest
+ContainerName=cloudreve
+AutoUpdate=registry
+Volume=/opt/podman/cloudreve/uploads:/cloudreve/uploads
+Volume=/opt/podman/cloudreve/conf.ini:/cloudreve/conf.ini
+Volume=/opt/podman/cloudreve/cloudreve.db:/cloudreve/cloudreve.db
+Volume=/opt/podman/cloudreve/avatar:/cloudreve/avatar
+Volume=/opt/podman/cloudreve/key.bin:/cloudreve/key.bin
+Volume=/opt/podman/socket/cloudreve:/run/cloudreve
+Network=cloudreve.network
+IP=172.16.0.3
+Environment=TZ=Asia/Shanghai
+
+[Service]
+Restart=always
+TimeoutStartSec=900
+ExecStartPre=/usr/bin/rm -f /opt/podman/socket/cloudreve/cloudreve.socket
+
+[Install]
+WantedBy=redis.service multi-user.target default.target
