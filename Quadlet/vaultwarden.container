@@ -1,0 +1,23 @@
+# https://github.com/dani-garcia/vaultwarden/wiki/Using-Podman
+
+[Unit]
+Description=Vaultwarden Quadlet
+
+[Container]
+Image=ghcr.io/dani-garcia/vaultwarden:latest
+ContainerName=vaultwarden
+AutoUpdate=registry
+Environment=TZ=Asia/Shanghai
+Environment=WEBSOCKET_ENABLED=true
+Environment=LOG_FILE=/data/bitwarden.log
+EnvironmentFile=
+Volume=/opt/podman/vw-data:/data
+Network=pasta
+PublishPort=127.0.0.1:1201:80
+
+[Service]
+Restart=always
+TimeoutStartSec=900
+
+[Install]
+WantedBy=multi-user.target default.target

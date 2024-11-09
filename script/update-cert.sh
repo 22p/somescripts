@@ -1,14 +1,6 @@
-#!/bin/sh
+#!/bin/bash
 
-SRV_NAME="Q"
-GITHUB_TOKEN="github_pat_"
-BARK_TOKEN=""
-TG_BOT_TOKEN=""
-TG_CHAT_ID=""
-REPO_PATH=""
-DOMAIN_NAME=""
-CERTIFICATE_FILE="/opt/podman/cert/$DOMAIN_NAME.crt"
-CERTIFICATE_KEY_FILE="/opt/podman/cert/$DOMAIN_NAME.key"
+# source .env
 
 # 将输入的字符串进行 URL 编码
 url_encode() {
@@ -48,12 +40,12 @@ curl -s -L \
   -H "Accept: application/vnd.github.raw+json" \
   -H "Authorization: Bearer $GITHUB_TOKEN" \
   -H "X-GitHub-Api-Version: 2022-11-28" \
-  https://api.github.com/repos/$REPO_PATH/contents/certificates/$DOMAIN_NAME.crt?ref=main -o $CERTIFICATE_FILE
+  https://api.github.com/repos/$GITHUB_REPO/contents/certificates/$FULL_DOMAIN.crt?ref=main -o $CERTIFICATE_FILE
 curl -s -L \
   -H "Accept: application/vnd.github.raw+json" \
   -H "Authorization: Bearer $GITHUB_TOKEN" \
   -H "X-GitHub-Api-Version: 2022-11-28" \
-  https://api.github.com/repos/$REPO_PATH/contents/certificates/$DOMAIN_NAME.key?ref=main -o $CERTIFICATE_KEY_FILE
+  https://api.github.com/repos/$GITHUB_REPO/contents/certificates/$FULL_DOMAIN.key?ref=main -o $CERTIFICATE_KEY_FILE
 
 # 获取新哈希值
 NEW_HASH=$(sha256sum $CERTIFICATE_FILE 2>/dev/null)
