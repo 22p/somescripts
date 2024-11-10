@@ -47,7 +47,7 @@ NEW_HASH=$(sha256sum $CERTIFICATE_FILE 2>/dev/null)
 
 if ! grep -q "BEGIN CERTIFICATE" $CERTIFICATE_FILE 2>/dev/null; then
   echo -e "\033[31m证书文件错误，请检查。\033[0m"
-  send_notifications "⟦证书下载失败⟧⟦$SRV_NAME⟧" "请检查" "$SRV_NAME" update"
+  send_notifications "⟦证书下载失败⟧⟦$SRV_NAME⟧" "请检查" "$SRV_NAME" update
   exit 1
 fi
 
