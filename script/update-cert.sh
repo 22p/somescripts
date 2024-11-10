@@ -2,29 +2,24 @@
 
 # source .env
 
-# 将输入的字符串进行 URL 编码
-url_encode() {
-  jq -nr --arg v "$1" '$v|@uri'
+# send_notifications "标题" "内容" [消息分组] [通知铃声]
+send_notifications() {
+  local group="${3:-default}"
+  local sound="${4:-bell}"
+
+  # 将输入的字符串进行 URL 编码
+  url_encode() {
+    jq -nr --arg v "$1" '$v|@uri'
+  }
+
+  # 发送 Bark 通知
+  curl -s -o /dev/null "https://api.day.app/$BARK_TOKEN/$(url_encode "$1")/$(url_encode "$2")?group=$(url_encode "$3")&sound=$4"
+
+  # 发送 Telegram 通知
+  # https://core.telegram.org/bots/api#markdownv2-style
+  curl -s -o /dev/null "https://api.telegram.org/bot$TG_BOT_TOKEN/sendMessage?chat_id=$TG_CHAT_ID&parse_mode=MarkdownV2&text=%2A$(url_encode "$1")%2A%0A$(url_encode "$2")"
 }
 
-# 定义发送 Bark 通知的函数
-# send_bark_notification "标题" "内容" "消息分组" "通知铃声"
-send_bark_notification() {
-  local title=$(url_encode "$1")
-  local message=$(url_encode "$2")
-  local group=$(url_encode "$3")
-  local sound=$4
-  curl -s -o /dev/null "https://api.day.app/$BARK_TOKEN/$title/$message?group=$group&sound=$sound"
-}
-
-# 定义发送 Telegram 通知的函数
-# https://core.telegram.org/bots/api#markdownv2-style
-# send_telegram_notification "标题" "内容"
-send_telegram_notification() {
-  local title=$(url_encode "$1")
-  local message=$(url_encode "$2")
-  curl -s -o /dev/null "https://api.telegram.org/bot$TG_BOT_TOKEN/sendMessage?chat_id=$TG_CHAT_ID&parse_mode=MarkdownV2&text=%2A$title%2A%0A$message"
-}
 
 # 定义重新加载服务的函数
 reload_service() {
@@ -52,16 +47,14 @@ NEW_HASH=$(sha256sum $CERTIFICATE_FILE 2>/dev/null)
 
 if ! grep -q "BEGIN CERTIFICATE" $CERTIFICATE_FILE 2>/dev/null; then
   echo -e "\033[31m证书文件错误，请检查。\033[0m"
-  send_bark_notification "❌[证书下载失败][$SRV_NAME]" "请检查" "$SRV_NAME" update
-  send_telegram_notification "❌\[证书下载失败\]\[$SRV_NAME\]" "请检查"
+  send_notifications "⟦证书下载失败⟧⟦$SRV_NAME⟧" "请检查" "$SRV_NAME" update"
   exit 1
 fi
 
 if [ "$OLD_HASH" != "$NEW_HASH" ]; then
   echo "已下载 重新加载服务"
   reload_service
-  send_bark_notification "✅[证书更新成功][$SRV_NAME]" "已重新加载服务" "$SRV_NAME" update
-  send_telegram_notification "✅\[证书更新成功\]\[$SRV_NAME\]" "已重新加载服务"
+  send_notifications "⟦证书更新成功⟧⟦$SRV_NAME⟧" "已重新加载服务" "$SRV_NAME" update
   exit 0
 else
   echo "证书未变动"

@@ -10,28 +10,23 @@ IPv6=$(ip addr show $NIC scope global | grep -oP 'inet6 \K[\da-f.:]+')
 #IPv4=$(ip -4 addr show $NIC scope global | grep inet | awk '{print $2}' | cut -d'/' -f1)
 #IPv6=$(ip -6 addr show $NIC scope global | grep inet | awk '{print $2}' | cut -d'/' -f1)
 
-# 将输入的字符串进行 URL 编码
-url_encode() {
-  jq -nr --arg v "$1" '$v|@uri'
-}
+# send_notifications "标题" "内容" [消息分组] [通知铃声]
+send_notifications() {
+  local group="${3:-default}"
+  local sound="${4:-bell}"
 
-# 定义发送 Bark 通知的函数
-# send_bark_notification "标题" "内容" "消息分组" "通知铃声"
-send_bark_notification() {
-  local title=$(url_encode "$1")
-  local message=$(url_encode "$2")
-  local group=$(url_encode "$3")
-  local sound=$4
-  curl -s -o /dev/null "https://api.day.app/$BARK_TOKEN/$title/$message?group=$group&sound=$sound"
-}
+  # 将输入的字符串进行 URL 编码
+  url_encode() {
+    jq -nr --arg v "$1" '$v|@uri'
+  }
 
-# 定义发送 Telegram 通知的函数
-# https://core.telegram.org/bots/api#markdownv2-style
-# send_telegram_notification "标题" "内容"
-send_telegram_notification() {
-  local title=$(url_encode "$1")
-  local message=$(url_encode "$2")
-  curl -s -o /dev/null "https://api.telegram.org/bot$TG_BOT_TOKEN/sendMessage?chat_id=$TG_CHAT_ID&parse_mode=MarkdownV2&text=%2A$title%2A%0A$message"
+  # 发送 Bark 通知
+  curl -s -o /dev/null "https://api.day.app/$BARK_TOKEN/$(url_encode "$1")/$(url_encode "$2")?group=$(url_encode "$3")&sound=$4"
+
+  # 发送 Telegram 通知
+  # https://core.telegram.org/bots/api#markdownv2-style
+  curl -s -o /dev/null "https://api.telegram.org/bot$TG_BOT_TOKEN/sendMessage?chat_id=$TG_CHAT_ID&parse_mode=MarkdownV2&text=%2A$(url_encode "$1")%2A%0A$(url_encode "$2")"
+
 }
 
 # 获取Zone ID和DNS记录ID的函数
@@ -91,14 +86,12 @@ if [ "$IPv6" != "$OLD_IP" ]; then
 
   if [ "$SUCCESS_A" == "true" ] && [ "$SUCCESS_AAAA" == "true" ]; then
     echo "Renew IPv4: $IPv4, IPv6: $IPv6"
-    send_bark_notification "[Renew IP][$SRV_NAME]" "IPv4：$IPv4，IPv6：$IPv6" "$SRV_NAME" minuet
-    send_telegram_notification "\[Renew IP\]\[$SRV_NAME\]" "IPv4: \`$IPv4\`
-IPv6 \`$IPv6\`"
+    send_notifications "⟦Renew IP⟧⟦$SRV_NAME⟧" "IPv4: \`$IPv4\`
+IPv6: \`$IPv6\`" "$SRV_NAME" minuet
     echo $IPv6 >/tmp/last_ip.txt
   else
     echo "Update ERROR :-C"
-    send_bark_notification "[Renew IP][$SRV_NAME]" "Update ERROR" "$SRV_NAME" minuet
-    send_telegram_notification "\[Renew IP\]\[$SRV_NAME\]" "Update ERROR"
+    send_notifications "⟦Renew IP⟧⟦$SRV_NAME⟧" "Update ERROR" "$SRV_NAME" minuet
     exit 1
   fi
 else
