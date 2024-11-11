@@ -66,11 +66,18 @@ update_dns_record() {
 update_dns_https_record() {
   local record_id="$1"
   local record_type="$2"
+  local data_content="\"priority\":1,\"target\":\".\",\"value\":\""
+
+  [[ -n "$HTTPS_ALPN" ]] && data_content+='alpn=\"'$HTTPS_ALPN'\" '
+  [[ -n "$HTTPS_PORT" ]] && data_content+='port=\"'$HTTPS_PORT'\" '
+  [[ -n "$ECH" ]] && data_content+='ech=\"'$ECH'\" '
+  [[ -n "$IPv4" ]] && data_content+='ipv4hint=\"'$IPv4'\" '
+  [[ -n "$IPv6" ]] && data_content+='ipv6hint=\"'$IPv6'\" '
 
   curl -s -X PUT "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/dns_records/$record_id" \
     -H "Authorization: Bearer $CF_TOKEN" \
     -H "Content-Type: application/json" \
-    --data '{"type":"'$record_type'","name":"'$FULL_DOMAIN'","data":{"priority": 1,"target": ".","value":"alpn=\"h3\" port=\"6643\" ipv4hint=\"'$IPv4'\" ipv6hint=\"'$IPv6'\""},"ttl":1,"proxied":false}' | jq -r '.success'
+    --data "{\"type\":\"$record_type\",\"name\":\"$FULL_DOMAIN\",\"data\":{$data_content\"},\"ttl\":1,\"proxied\":false}" | jq -r '.success'
 }
 
 if [ "$IPv6" != "$OLD_IP" ]; then
@@ -80,7 +87,7 @@ if [ "$IPv6" != "$OLD_IP" ]; then
   # 更新IPv6记录
   SUCCESS_AAAA=$(update_dns_record "$RECORD_ID_AAAA" "$IPv6" "AAAA")
   # 更新HTTPS记录
-  # SUCCESS_HTTPS=$(update_dns_https_record "$RECORD_ID_HTTPS" "HTTPS")
+  SUCCESS_HTTPS=$(update_dns_https_record "$RECORD_ID_HTTPS" "HTTPS")
   # 更新SVCB记录
   # SUCCESS_SVCB=$(update_dns_https_record "$RECORD_ID_SVCB" "SVCB")
 
