@@ -1,0 +1,6 @@
+[Service]
+Type=oneshot 
+ExecStart=setsebool httpd_can_network_connect 1
+RemainAfterExit=yes
+[Install]
+WantedBy=multi-user.target

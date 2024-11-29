@@ -1,0 +1,13 @@
+/opt/podman/www/wwwlogs/*.log {
+    daily
+    missingok
+    rotate 7
+    compress
+    delaycompress
+    notifempty
+    create 0660 core core
+    sharedscripts
+    postrotate
+        su core -c "podman exec nginx nginx -s reopen > /dev/null 2>&1 || true"
+    endscript
+}
