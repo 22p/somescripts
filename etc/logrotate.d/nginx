@@ -8,6 +8,6 @@
     create 0660 core core
     sharedscripts
     postrotate
-        su core -c "podman exec nginx nginx -s reopen > /dev/null 2>&1 || true"
+        su - core -c "podman exec nginx nginx -s reopen > /dev/null 2>&1 || true"
     endscript
 }
