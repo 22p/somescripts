@@ -23,6 +23,12 @@ mkdir -p "$wg_config_dir"
 # 生成预共享密钥
 preshared_key=$(wg genpsk)
 
+# 获取每个设备的Endpoint地址
+for ((i = 1; i <= device_num; i++)); do
+    read -p "请输入设备$i的Endpoint地址（格式：IP或主机名:端口）: " endpoint
+    endpoints+=("$endpoint")
+done
+
 # 生成设备的私钥和公钥
 for ((i = 1; i <= device_num; i++)); do
     private_key=$(wg genkey)
@@ -51,7 +57,6 @@ addr-gen-mode=default
 method=manual
 
 [proxy]
-# 这里会填充其他设备的公钥和AllowedIPs
 EOF
 
     # 创建wg配置文件
@@ -64,8 +69,6 @@ Address = $IPv6$i/128
 ListenPort = $port
 MTU = $mtu
 
-[Peer]
-# 这里会填充其他设备的公钥和AllowedIPs
 EOF
 
     # 将生成的公钥保存到一个数组中，用于后续配置Peer信息
@@ -75,37 +78,31 @@ done
 # 配置Peer信息
 for ((i = 1; i <= device_num; i++)); do
     nm_config_file="$nm_config_dir/device$i.nmconnection"
-
-    # 从第二个设备开始，每个设备都需要配置其他所有设备的Peer信息
-    for ((j = 1; j <= device_num; j++)); do
-        if [ "$i" -ne "$j" ]; then
-            echo "" >>"$nm_config_file"
-            echo "[wireguard-peer.${public_keys[$j - 1]}]" >>"$nm_config_file"
-            echo "preshared-key=$preshared_key" >>"$nm_config_file"
-            echo "allowed-ips=$IPv4$j/32, $IPv6$j/128" >>"$nm_config_file"
-            echo "Endpoint = device$j # 这里需要替换为实际的设备主机名或IP" >>"$nm_config_file"
-            echo "persistent-keepalive=30" >>"$nm_config_file"
-        fi
-    done
-done
-
-# 配置Peer信息
-for ((i = 1; i <= device_num; i++)); do
     wg_config_file="$wg_config_dir/device$i.conf"
 
     # 从第二个设备开始，每个设备都需要配置其他所有设备的Peer信息
     for ((j = 1; j <= device_num; j++)); do
         if [ "$i" -ne "$j" ]; then
-            echo "" >>"$wg_config_file"
-            echo "[Peer]" >>"$wg_config_file"
-            echo "PublicKey = ${public_keys[$j - 1]}" >>"$wg_config_file"
-            echo "PresharedKey =  $preshared_key" >>"$wg_config_file"
-            echo "AllowedIPs = $IPv4$j/32, $IPv6$j/128" >>"$wg_config_file"
-            echo "Endpoint = device$j # 这里需要替换为实际的设备主机名或IP" >>"$wg_config_file"
-            echo "PersistentKeepalive = 30" >>"$wg_config_file"
+            cat >>"$nm_config_file" <<EOF
+
+[wireguard-peer.${public_keys[$j - 1]}]
+preshared-key=$preshared_key
+allowed-ips=$IPv4$j/32, $IPv6$j/128
+endpoint=${endpoints[$j - 1]}
+persistent-keepalive=30
+EOF
+            # wg
+            cat >>"$wg_config_file" <<EOF
+
+[Peer]
+PublicKey = ${public_keys[$j - 1]}
+PresharedKey = $preshared_key
+AllowedIPs = $IPv4$j/32, $IPv6$j/128
+Endpoint = ${endpoints[$j - 1]}
+PersistentKeepalive = 30
+EOF
         fi
     done
 done
 
 echo "配置文件已生成在$nm_config_dir $wg_config_dir目录下"
-echo "请将配置文件拷贝到各设备并配置好Endpoint信息"
