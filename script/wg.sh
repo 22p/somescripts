@@ -87,7 +87,7 @@ for ((i = 1; i <= device_num; i++)); do
 
 [wireguard-peer.${public_keys[$j - 1]}]
 preshared-key=$preshared_key
-allowed-ips=$IPv4$j/32, $IPv6$j::/64
+allowed-ips=$IPv4$j/32;$IPv6$j::/64
 endpoint=${endpoints[$j - 1]}
 persistent-keepalive=25
 EOF
