@@ -10,8 +10,8 @@ fi
 read -p "请输入需要配置的设备数量: " device_num
 
 IPv4="192.168.255."
-IPv6="fdff:cafe::"
-port="6699"
+IPv6="fdff:cafe:"
+port="51820"
 mtu="1400"
 
 # 创建存储配置文件的目录
@@ -52,7 +52,7 @@ address1=$IPv4$i/32
 method=manual
 
 [ipv6]
-address1=$IPv6$i/128
+address1=$IPv6$i::/64
 addr-gen-mode=default
 method=manual
 
@@ -65,7 +65,7 @@ EOF
 [Interface]
 PrivateKey = $private_key
 Address = $IPv4$i/32
-Address = $IPv6$i/128
+Address = $IPv6$i::/64
 ListenPort = $port
 MTU = $mtu
 
@@ -87,9 +87,9 @@ for ((i = 1; i <= device_num; i++)); do
 
 [wireguard-peer.${public_keys[$j - 1]}]
 preshared-key=$preshared_key
-allowed-ips=$IPv4$j/32, $IPv6$j/128
+allowed-ips=$IPv4$j/32, $IPv6$j::/64
 endpoint=${endpoints[$j - 1]}
-persistent-keepalive=30
+persistent-keepalive=25
 EOF
             # wg
             cat >>"$wg_config_file" <<EOF
@@ -97,9 +97,9 @@ EOF
 [Peer]
 PublicKey = ${public_keys[$j - 1]}
 PresharedKey = $preshared_key
-AllowedIPs = $IPv4$j/32, $IPv6$j/128
+AllowedIPs = $IPv4$j/32, $IPv6$j::/64
 Endpoint = ${endpoints[$j - 1]}
-PersistentKeepalive = 30
+PersistentKeepalive = 25
 EOF
         fi
     done
