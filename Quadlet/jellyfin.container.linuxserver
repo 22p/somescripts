@@ -12,8 +12,8 @@ Environment=TZ=Asia/Shanghai
 Volume=/opt/podman/jellyfin:/config
 Volume=/opt/podman/fonts:/usr/share/fonts/opentype
 Volume=/opt/data:/data
-PublishPort=8096:8096
-PublishPort=8920:8920
+Network=pasta:-i,br0
+PublishPort=127.0.10.5:9999:8096
 PublishPort=1900:1900/udp
 
 [Service]

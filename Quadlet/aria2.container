@@ -10,7 +10,8 @@ Environment=ARIA2RPCPORT=443
 Environment=RPC_SECRET=*****secret*****
 Volume=/opt/data/download:/aria2/data
 Volume=/opt/podman/aria2:/aria2/conf
-PublishPort=192.168.168.1:8080:8080
+Network=pasta:-i,br0
+PublishPort=127.0.10.3:9999:8080
 
 [Service]
 Restart=always

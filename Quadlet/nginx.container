@@ -9,11 +9,9 @@ Environment=TZ=Asia/Shanghai
 Volume=/opt/podman/www/nginx_conf:/etc/nginx/conf.d:ro
 Volume=/opt/podman/cert:/cert:ro
 Volume=/opt/podman/www/wwwroot:/html
+Volume=/opt/podman/socket:/dev/shm
 Volume=/opt/podman/www/wwwlogs:/var/log/nginx
-# Network=pasta:-i,br0,-T,auto
-PublishPort=80:80
-PublishPort=443:443
-PublishPort=443:443/udp
+Network=host
 
 [Service]
 Restart=always
