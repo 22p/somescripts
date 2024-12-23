@@ -7,8 +7,8 @@ ContainerName=alist
 AutoUpdate=registry
 Environment=TZ=Asia/Shanghai
 Volume=/opt/podman/alist:/opt/alist/data
+Volume=/opt/podman/socket/alist:/dev/shm
 Network=pasta:-i,br0
-PublishPort=127.0.10.4:9999:5244
 
 [Service]
 Restart=always
