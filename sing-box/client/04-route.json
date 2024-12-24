@@ -12,7 +12,7 @@
             "port": 53
           }
         ],
-        "outbound": "dns-out"
+        "action": "hijack-dns"
       },
       {
         "type": "logical",
@@ -29,7 +29,7 @@
             "protocol": "stun"
           }
         ],
-        "outbound": "block"
+        "action": "reject"
       },
       {
         "clash_mode": "Direct",
@@ -43,7 +43,7 @@
         "rule_set": [
           "geosite-category-ads-all"
         ],
-        "outbound": "block"
+        "action": "reject"
       },
       {
         "rule_set": [

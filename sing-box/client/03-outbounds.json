@@ -11,14 +11,6 @@
       "tag": "direct"
     },
     {
-      "type": "block",
-      "tag": "block"
-    },
-    {
-      "type": "dns",
-      "tag": "dns-out"
-    },
-    {
       "type": "selector",
       "tag": "proxy",
       "outbounds": [
