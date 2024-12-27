@@ -82,6 +82,7 @@ table inet router {
 		meta nfproto ipv6 icmpv6 type . icmpv6 code { 2 . 0, 4 . 0, 4 . 1 } limit rate 1000/second counter accept # Allow-ICMPv6-Forward
 		meta l4proto esp counter oifname $DEV_PRIVATE counter accept # Allow-IPSec-ESP
 		udp dport 500 counter oifname $DEV_PRIVATE counter accept # Allow-ISAKMP
+		# meta nfproto ipv6 oifname $DEV_PRIVATE counter accept # 暴露内部网络设备 IPv6 到公网
 		oifname $DEV_WORLD counter jump handle_reject
 	}
 
