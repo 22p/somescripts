@@ -1,6 +1,8 @@
 #!/usr/bin/nft -f
 
-flush ruleset
+table inet router
+flush table inet router
+delete flowtable inet router ft
 
 define DEV_PRIVATE = { tun0, br0 }
 define DEV_WORLD = { ppp0, enp1s0 }
@@ -20,30 +22,30 @@ table inet router {
 		devices = { eno1, enp1s0, enp2s0, enp4s0 };
 	}
 
-	#
-	# Filter rules
-	#
-
+	####################
+	# Input 规则链
+	####################
 	chain inbound {
 		type filter hook input priority filter; policy drop;
 
 		iifname "lo" accept
-		iifname $DEV_WG counter accept
 		ct state established,related accept
-		# 根据规则跳转到其他链
 		iifname $DEV_PRIVATE jump inbound_private
+		iifname $DEV_WG jump inbound_wireguard
 		iifname $DEV_WORLD jump inbound_world
-		jump handle_reject
+		counter jump handle_reject
 	}
 
-	# 处理内部输入流量
 	chain inbound_private {
 		# 如果来自私有网络且 MAC 地址在封禁列表中，则丢弃
-		iifname $DEV_PRIVATE ether saddr $BANNED_MAC counter drop
-		iifname $DEV_PRIVATE counter accept
+		# iifname $DEV_PRIVATE ether saddr $BANNED_MAC counter drop
+		counter accept
 	}
 
-	# 处理外部输入流量
+	chain inbound_wireguard {
+		counter accept
+	}
+
 	chain inbound_world {
 		meta nfproto ipv4 udp dport 68 counter accept # Allow-DHCP-Renew
 		meta nfproto ipv4 icmp type 8 counter accept # Allow-Ping
@@ -54,30 +56,33 @@ table inet router {
 		meta nfproto ipv6 icmpv6 type . icmpv6 code { 2 . 0, 4 . 0, 4 . 1, 135 . 0, 136 . 0 } limit rate 1000/second counter accept # Allow-ICMPv6-Input
 		tcp dport 22 counter accept # Allow-SSH
 		udp dport 6699 counter accept # Allow-WireGuard
-		iifname $DEV_WORLD counter jump handle_reject
+		counter jump handle_reject
 	}
 
+	####################
+	# Forward 规则链
+	####################
 	chain forward {
 		type filter hook forward priority filter; policy drop;
 
 		meta l4proto { tcp, udp } flow offload @ft;
 		ct state established,related accept
 		iifname $DEV_PRIVATE jump forward_private
+		iifname $DEV_WG jump forward_wireguard
 		iifname $DEV_WORLD jump forward_world
-		iifname $DEV_WG counter accept
-		oifname $DEV_WG counter accept
-		jump handle_reject
+		counter jump handle_reject
 	}
 
-	# 处理内部的转发流量
 	chain forward_private {
-		oifname $DEV_PRIVATE counter accept
+		oifname $DEV_WG counter accept
 		oifname $DEV_WORLD counter accept
 		# 丢弃无效数据包
 		meta nfproto ipv4 oifname $DEV_WORLD ct state invalid counter drop
 	}
 
-	# 处理外部的转发流量
+	chain forward_wireguard {
+	}
+
 	chain forward_world {
 		meta nfproto ipv6 icmpv6 type { 128, 129, 1, 3 } limit rate 1000/second counter accept # Allow-ICMPv6-Forward
 		meta nfproto ipv6 icmpv6 type . icmpv6 code { 2 . 0, 4 . 0, 4 . 1 } limit rate 1000/second counter accept # Allow-ICMPv6-Forward
@@ -86,39 +91,45 @@ table inet router {
 		oifname $DEV_WORLD counter jump handle_reject
 	}
 
-	# 处理出站流量
+	####################
+	# Output 规则链
+	####################
 	chain outbound {
 		type filter hook output priority filter; policy accept;
 
 		oifname "lo" accept
 
 		ct state established,related accept
-		oifname $DEV_PRIVATE jump outbound_private
 		oifname $DEV_WORLD jump outbound_world
+		oifname $DEV_PRIVATE jump outbound_private
+		oifname $DEV_WG jump outbound_wireguard
 	}
 
-	# 处理内部的出站流量
-	chain outbound_private {
-		iifname $DEV_PRIVATE counter accept
-	}
-
-	# 处理外部的出站流量
 	chain outbound_world {
 		# 丢弃无效数据包
 		meta nfproto ipv4 oifname $DEV_WORLD ct state invalid counter drop
-		oifname $DEV_WORLD counter accept
+		counter accept
 	}
 
-	# 拒绝其他流量
+	chain outbound_private {
+		counter accept
+	}
+
+	chain outbound_wireguard {
+		counter accept
+	}
+
+	####################
+	# 拒绝处理
+	####################
 	chain handle_reject {
-		meta l4proto tcp reject with tcp reset # Reject TCP traffic 拒绝 TCP 流量
-		reject with icmpx type port-unreachable # Reject any other traffic 拒绝任何其他流量
+		meta l4proto tcp reject with tcp reset
+		reject
 	}
 
-	#
-	# NAT rules
-	#
-
+	####################
+	# NAT 规则
+	####################
 	chain dstnat {
 		type nat hook prerouting priority dstnat; policy accept;
 	}
