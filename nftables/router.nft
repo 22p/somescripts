@@ -13,23 +13,21 @@ define BANNED_MAC = { f4:1c:71:1f:59:e8 }
 
 table inet router {
 
-	#
-	# Flowtable
-	#
-
+	# Flowtable 设置
 	flowtable ft {
 		hook ingress priority 0;
 		devices = { eno1, enp1s0, enp2s0, enp4s0 };
 	}
 
 	####################
-	# Input 规则链
+	# Inbound 规则链
 	####################
 	chain inbound {
 		type filter hook input priority filter; policy drop;
 
 		iifname "lo" accept
 		ct state established,related accept
+		# 跳转到具体规则链
 		iifname $DEV_PRIVATE jump inbound_private
 		iifname $DEV_WG jump inbound_wireguard
 		iifname $DEV_WORLD jump inbound_world
@@ -38,7 +36,7 @@ table inet router {
 
 	chain inbound_private {
 		# 如果来自私有网络且 MAC 地址在封禁列表中，则丢弃
-		# iifname $DEV_PRIVATE ether saddr $BANNED_MAC counter drop
+		# ether saddr $BANNED_MAC counter drop
 		counter accept
 	}
 
@@ -92,7 +90,7 @@ table inet router {
 	}
 
 	####################
-	# Output 规则链
+	# Outbound 规则链
 	####################
 	chain outbound {
 		type filter hook output priority filter; policy accept;
@@ -106,8 +104,8 @@ table inet router {
 	}
 
 	chain outbound_world {
-		# 丢弃无效数据包
-		meta nfproto ipv4 oifname $DEV_WORLD ct state invalid counter drop
+		# 防止 NAT 泄漏
+		meta nfproto ipv4 ct state invalid counter drop
 		counter accept
 	}
 
@@ -116,6 +114,8 @@ table inet router {
 	}
 
 	chain outbound_wireguard {
+		# 防止 NAT 泄漏
+		meta nfproto ipv4 ct state invalid counter drop
 		counter accept
 	}
 
@@ -128,7 +128,7 @@ table inet router {
 	}
 
 	####################
-	# NAT 规则
+	# Nat 规则链
 	####################
 	chain dstnat {
 		type nat hook prerouting priority dstnat; policy accept;
@@ -138,12 +138,12 @@ table inet router {
 		type nat hook postrouting priority srcnat; policy accept;
 		# 对 IPv4 外部流量进行伪装，将源地址转换为出口接口的公共 IP 地址
 		oifname $DEV_WORLD meta nfproto ipv4 masquerade
+		oifname $DEV_WG meta nfproto ipv4 masquerade
 	}
 
-	#
-	# Raw rules (notrack)
-	#
-
+	####################
+	# Raw 规则链 (notrack)
+	####################
 	chain raw_prerouting {
 		type filter hook prerouting priority raw; policy accept;
 	}
@@ -152,10 +152,9 @@ table inet router {
 		type filter hook output priority raw; policy accept;
 	}
 
-	#
-	# Mangle rules
-	#
-
+	####################
+	# Mangle 规则链
+	####################
 	chain mangle_prerouting {
 		type filter hook prerouting priority mangle; policy accept;
 		# meta iifname $DEV_WORLD return
@@ -163,6 +162,8 @@ table inet router {
 
 	chain mangle_postrouting {
 		type filter hook postrouting priority mangle; policy accept;
+		# MTU 钳制
+		oifname $DEV_WORLD tcp flags syn / syn,fin,rst tcp option maxseg size set rt mtu
 	}
 
 	chain mangle_input {
@@ -175,8 +176,7 @@ table inet router {
 
 	chain mangle_forward {
 		type filter hook forward priority mangle; policy accept;
-		# 设置最大分段大小（MSS）
-		iifname $DEV_WORLD tcp flags syn tcp option maxseg size set rt mtu
-		oifname $DEV_WORLD tcp flags syn tcp option maxseg size set rt mtu
+		# MTU 钳制
+		iifname $DEV_WORLD tcp flags syn / syn,fin,rst tcp option maxseg size set rt mtu
 	}
 }
