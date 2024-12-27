@@ -75,6 +75,7 @@ table inet router {
 	}
 
 	chain forward_wireguard {
+		oifname $DEV_PRIVATE counter accept
 	}
 
 	chain forward_world {
