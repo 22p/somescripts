@@ -72,8 +72,6 @@ table inet router {
 	chain forward_private {
 		oifname $DEV_WG counter accept
 		oifname $DEV_WORLD counter accept
-		# 丢弃无效数据包
-		meta nfproto ipv4 oifname $DEV_WORLD ct state invalid counter drop
 	}
 
 	chain forward_wireguard {
