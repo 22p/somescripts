@@ -5,18 +5,9 @@
     compress
     delaycompress
     notifempty
-    create 0666 core core
+    create 0660 core core
     sharedscripts
-    prerotate
-        chattr -a /opt/podman/www/wwwlogs/*.log 2>/dev/null || true
-        chattr -a /opt/podman/www/wwwlogs/*.log.1 2>/dev/null || true
-        chattr -i /opt/podman/www/wwwlogs/*.gz 2>/dev/null || true
-    endscript
     postrotate
         kill -USR1 $(pgrep nginx) > /dev/null 2>&1 || true
-        chattr +a /opt/podman/www/wwwlogs/*.log 2>/dev/null || true
-        chattr +a /opt/podman/www/wwwlogs/*.log.1 2>/dev/null || true
-        chattr +i /opt/podman/www/wwwlogs/*.gz 2>/dev/null || true
-        chattr -i /opt/podman/www/wwwlogs/*.8.gz 2>/dev/null || true
     endscript
 }
