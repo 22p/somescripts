@@ -1,8 +1,6 @@
 #!/usr/bin/nft -f
 
-table inet router
-flush table inet router
-delete flowtable inet router ft
+flush ruleset
 
 define DEV_PRIVATE = { tun0, br0 }
 define DEV_WORLD = { ppp0, enp1s0 }
