@@ -1,3 +1,5 @@
+# touch ~/containers/filebrowser/database.db
+# curl -Lo ~/containers/filebrowser/.filebrowser.json https://github.com/filebrowser/filebrowser/raw/refs/heads/master/docker/root/defaults/settings.json
 [Unit]
 Description=filebrowser Quadlet
 
@@ -6,16 +8,17 @@ Image=docker.io/filebrowser/filebrowser:latest
 ContainerName=filebrowser
 AutoUpdate=registry
 Environment=TZ=Asia/Shanghai
-Volume=/opt/data:/srv
-Volume=/opt/podman/filebrowser/database.db:/database.db
-Volume=/opt/podman/filebrowser/.filebrowser.json:/.filebrowser.json
-Volume=/opt/podman/socket/filebrowser:/dev/shm
+Volume=../../../containers/filebrowser/database.db:/database.db:Z
+Volume=../../../containers/filebrowser/.filebrowser.json:/.filebrowser.json:Z
+Volume=../../../containers/socket/filebrowser:/dev/shm:z
+# Volume=/opt/data:/srv
 Network=none
 
 [Service]
 Restart=always
 TimeoutStartSec=900
-ExecStartPre=/usr/bin/rm -f /opt/podman/socket/filebrowser/filebrowser.socket
+ExecStartPre=/bin/sh -c "/bin/mkdir -p /home/username/containers/{filebrowser,socket/filebrowser}"
+ExecStartPre=/bin/rm -f /home/username/containers/socket/filebrowser/filebrowser.socket
 
 [Install]
 WantedBy=multi-user.target default.target
