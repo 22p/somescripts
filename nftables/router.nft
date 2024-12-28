@@ -113,7 +113,7 @@ table inet router {
 
 	chain outbound_wireguard {
 		# 防止 NAT 泄漏
-		# meta nfproto ipv4 ct state invalid counter drop
+		meta nfproto ipv4 ct state invalid counter drop
 		counter accept
 	}
 
@@ -136,7 +136,7 @@ table inet router {
 		type nat hook postrouting priority srcnat; policy accept;
 		# 对 IPv4 外部流量进行伪装，将源地址转换为出口接口的公共 IP 地址
 		oifname $DEV_WORLD meta nfproto ipv4 masquerade
-		# oifname $DEV_WG meta nfproto ipv4 masquerade #  WireGuard 点对点不需要 NAT
+		oifname $DEV_WG meta nfproto ipv4 masquerade
 	}
 
 	####################
