@@ -6,14 +6,16 @@ Image=docker.io/library/nginx:alpine
 ContainerName=nginx
 AutoUpdate=registry
 Environment=TZ=Asia/Shanghai
-Volume=/opt/podman/www/nginx_conf:/etc/nginx/conf.d:ro
-Volume=/opt/podman/cert:/cert:ro
-Volume=/opt/podman/www/wwwroot:/html
-Volume=/opt/podman/socket:/dev/shm
-Volume=/opt/podman/www/wwwlogs:/var/log/nginx
+# Volume=../../../containers/www/nginx.conf:/etc/nginx/nginx.conf:ro,Z
+Volume=../../../containers/www/conf:/etc/nginx/conf.d:ro,Z
+Volume=../../../containers/www/wwwroot:/html:Z
+Volume=../../../containers/www/wwwlogs:/var/log/nginx:Z
+Volume=../../../containers/cert:/cert:ro,z
+Volume=../../../containers/socket:/dev/shm:z
 Network=host
 
 [Service]
+ExecStartPre=/bin/sh -c "/bin/mkdir -p /home/username/containers/{www/{conf,wwwroot,wwwlogs},cert,socket}"
 Restart=always
 TimeoutStartSec=900
 
