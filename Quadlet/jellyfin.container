@@ -1,6 +1,6 @@
 # https://jellyfin.org/docs/general/installation/container/#managing-via-systemd
 # https://github.com/notofonts/noto-cjk/tree/main/Sans/OTC
-# mkdir -p /home/nyxara/containers/{jellyfin,fonts}
+# mkdir -p ~/containers/{jellyfin,fonts}
 [Unit]
 Description=Jellyfin Quadlet
 
