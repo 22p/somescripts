@@ -1,5 +1,6 @@
 # https://github.com/dani-garcia/vaultwarden/wiki/Using-Podman
-
+# mkdir -p /home/nyxara/containers/vw-data
+# curl -LO ~/containers/vw-data/vaultwarden.env https://raw.githubusercontent.com/22p/somescripts/refs/heads/main/Quadlet/data/vaultwarden.env
 [Unit]
 Description=Vaultwarden Quadlet
 
@@ -8,10 +9,10 @@ Image=ghcr.io/dani-garcia/vaultwarden:latest
 ContainerName=vaultwarden
 AutoUpdate=registry
 Environment=TZ=Asia/Shanghai
-EnvironmentFile=/opt/podman/vw-data/vaultwarden.env
-Volume=/opt/podman/vw-data:/data
-Network=pasta:-i,br0
-PublishPort=127.0.10.2:9999:80
+EnvironmentFile=../../../containers/vw-data/vaultwarden.env
+Volume=../../../containers/vw-data:/data:Z
+Network=pasta
+PublishPort=127.0.0.1:9999:80
 
 [Service]
 Restart=always

@@ -1,3 +1,5 @@
+# mkdir -p /home/nyxara/containers/{www/{conf.d,wwwroot/{default,file},wwwlogs},cert,socket}
+# curl -LO ~/containers/www/nginx.conf https://raw.githubusercontent.com/22p/somescripts/refs/heads/main/Quadlet/data/nginx.conf
 [Unit]
 Description=Nginx Quadlet
 
@@ -6,16 +8,18 @@ Image=docker.io/library/nginx:alpine
 ContainerName=nginx
 AutoUpdate=registry
 Environment=TZ=Asia/Shanghai
-# Volume=../../../containers/www/nginx.conf:/etc/nginx/nginx.conf:ro,Z
+Volume=../../../containers/www/nginx.conf:/etc/nginx/nginx.conf:ro,Z
 Volume=../../../containers/www/conf.d:/etc/nginx/conf.d:ro,Z
 Volume=../../../containers/www/wwwroot:/html:Z
 Volume=../../../containers/www/wwwlogs:/var/log/nginx:Z
 Volume=../../../containers/cert:/cert:ro,z
 Volume=../../../containers/socket:/dev/shm:z
-Network=host
+Network=pasta:-T,auto
+PublishPort=80:80
+PublishPort=443:443
+PublishPort=443:443/udp
 
 [Service]
-ExecStartPre=/bin/sh -c "/bin/mkdir -p /home/username/containers/{www/{conf.d,wwwroot,wwwlogs},cert,socket}"
 Restart=always
 TimeoutStartSec=900
 

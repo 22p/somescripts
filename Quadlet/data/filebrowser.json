@@ -1,0 +1,7 @@
+{
+  "socket": "/dev/shm/filebrowser.socket",
+  "baseURL": "",
+  "log": "stdout",
+  "database": "/database.db",
+  "root": "/srv"
+}

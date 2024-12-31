@@ -1,5 +1,6 @@
 # https://jellyfin.org/docs/general/installation/container/#managing-via-systemd
 # https://github.com/notofonts/noto-cjk/tree/main/Sans/OTC
+# mkdir -p /home/nyxara/containers/{jellyfin,fonts}
 [Unit]
 Description=Jellyfin Quadlet
 
@@ -13,7 +14,7 @@ Environment=TZ=Asia/Shanghai
 Volume=../../../containers/jellyfin:/config:Z
 Volume=../../../containers/fonts:/usr/share/fonts/opentype:ro,z
 # Volume=/opt/data:/data:ro,z
-Network=pasta:-i,br0
+Network=pasta
 PublishPort=8906:8096
 
 [Service]
@@ -21,7 +22,6 @@ Restart=always
 TimeoutStartSec=900
 # Inform systemd of additional exit status
 SuccessExitStatus=0 143
-ExecStartPre=/bin/sh -c "/bin/mkdir -p /home/username/containers/{jellyfin,fonts}"
 
 [Install]
 WantedBy=multi-user.target default.target
