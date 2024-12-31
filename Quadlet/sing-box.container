@@ -1,3 +1,4 @@
+# mkdir -p ~/containers/{sing-box,cert}
 [Unit]
 Description=sing-box Quadlet
 
@@ -6,10 +7,11 @@ Image=ghcr.io/sagernet/sing-box:latest
 ContainerName=sing-box
 AutoUpdate=registry
 Environment=TZ=Asia/Shanghai
-Volume=/opt/podman/sing-box:/app
-Volume=/opt/podman/cert:/cert
+Volume=../../../containers/sing-box:/app:Z
+Volume=../../../containers/cert:/cert:ro,z
 Exec=run -C /app
-Network=host
+Network=pasta
+PublishPort=127.0.0.1:12345:12345
 
 [Service]
 Restart=always

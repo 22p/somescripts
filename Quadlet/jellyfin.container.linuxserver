@@ -1,3 +1,4 @@
+# mkdir -p ~/containers/{jellyfin,fonts}
 [Unit]
 Description=Jellyfin Quadlet
 
@@ -9,12 +10,11 @@ AddDevice=/dev/dri:/dev/dri
 Environment=PUID=0
 Environment=PGID=0
 Environment=TZ=Asia/Shanghai
-Volume=/opt/podman/jellyfin:/config
-Volume=/opt/podman/fonts:/usr/share/fonts/opentype
-Volume=/opt/data:/data
-Network=pasta:-i,br0
-PublishPort=127.0.10.5:9999:8096
-PublishPort=1900:1900/udp
+Volume=../../../containers/jellyfin:/config:Z
+Volume=../../../containers/fonts:/usr/share/fonts/opentype:ro,z
+# Volume=/opt/data:/data:ro,z
+Network=pasta
+PublishPort=8906:8096
 
 [Service]
 Restart=always

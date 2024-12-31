@@ -1,6 +1,6 @@
 # https://github.com/dani-garcia/vaultwarden/wiki/Using-Podman
 # mkdir -p ~/containers/vw-data
-# curl -LO ~/containers/vw-data/vaultwarden.env https://raw.githubusercontent.com/22p/somescripts/refs/heads/main/Quadlet/data/vaultwarden.env
+# curl -Lo ~/containers/vw-data/vaultwarden.env https://raw.githubusercontent.com/22p/somescripts/refs/heads/main/Quadlet/data/vaultwarden.env
 [Unit]
 Description=Vaultwarden Quadlet
 
