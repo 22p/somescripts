@@ -1,0 +1,31 @@
+# mkdir -p ~/containers/{cloudreve/{uploads,avatar},socket/cloudreve}
+# touch ~/containers/cloudreve.db/cloudreve.db
+# curl -Lo ~/containers/cloudreve/conf.ini https://raw.githubusercontent.com/22p/somescripts/refs/heads/main/Quadlet/data/cloudreve.ini
+[Unit]
+Description=Cloudreve Quadlet
+Requires=cloudreve-valkey.service
+After=cloudreve-valkey.service
+
+[Container]
+Image=docker.io/library/debian:bookworm-slim
+ContainerName=cloudreve
+AutoUpdate=registry
+Environment=TZ=Asia/Shanghai
+Volume=../../../containers/cloudreve/uploads:/cloudreve/uploads:Z
+Volume=../../../containers/cloudreve/conf.ini:/cloudreve/conf.ini:Z
+Volume=../../../containers/cloudreve/cloudreve.db:/cloudreve/cloudreve.db:Z
+Volume=../../../containers/cloudreve/avatar:/cloudreve/avatar:Z
+Volume=../../../containers/socket/cloudreve:/dev/shm:z
+# pro add ↓
+Volume=../../../containers/cloudreve/cloudreve:/cloudreve/cloudreve:Z
+Volume=../../../containers/cloudreve/key.bin:/cloudreve/key.bin:Z
+Exec=/cloudreve/cloudreve
+Network=pasta:-T,6379
+
+[Service]
+Restart=always
+TimeoutStartSec=900
+ExecStartPre=/usr/bin/rm -f /home/nyxara/containers/socket/cloudreve/cloudreve.socket
+
+[Install]
+WantedBy=multi-user.target default.target
