@@ -1,3 +1,5 @@
+# mkdir -p ~/containers/{alist,socket/alist}
+# jq '.scheme.http_port= -1 | .scheme.unix_file= "/dev/shm/alist.socket" | .scheme.unix_file_perm= "0666"' ~/containers/alist/config.json > ~/containers/alist/config.json.tmp && mv ~/containers/alist/config.json.tmp ~/containers/alist/config.json
 [Unit]
 Description=alist Quadlet
 
@@ -6,14 +8,14 @@ Image=docker.io/xhofe/alist:latest
 ContainerName=alist
 AutoUpdate=registry
 Environment=TZ=Asia/Shanghai
-Volume=/opt/podman/alist:/opt/alist/data
-Volume=/opt/podman/socket/alist:/dev/shm
-Network=pasta:-i,br0
+Volume=../../../containers/alist:/opt/alist/data:Z
+Volume=../../../containers/socket/alist:/dev/shm:z
+Network=pasta
 
 [Service]
 Restart=always
 TimeoutStartSec=900
-ExecStartPre=/usr/bin/rm -f /opt/podman/socket/alist/alist.socket
+ExecStartPre=/usr/bin/rm -f /home/nyxara/containers/socket/alist/alist.socket
 
 [Install]
 WantedBy=multi-user.target default.target
