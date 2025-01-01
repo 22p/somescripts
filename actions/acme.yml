@@ -63,7 +63,6 @@ jobs:
           letsencrypt: https://acme-v02.api.letsencrypt.org/directory
           zerossl: https://acme.zerossl.com/v2/DV90
           google: https://dv.acme-v02.api.pki.goog/directory
-        continue-on-error: true
 
       - name: Push Certificates to GitHub
         run: |
