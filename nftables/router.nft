@@ -85,7 +85,6 @@ table inet router {
 		meta l4proto esp counter oifname $DEV_PRIVATE counter accept # Allow-IPSec-ESP
 		udp dport 500 counter oifname $DEV_PRIVATE counter accept # Allow-ISAKMP
 		# meta nfproto ipv6 oifname $DEV_PRIVATE counter accept # 暴露内部网络设备 IPv6 到公网
-		oifname $DEV_WORLD counter jump handle_reject
 	}
 
 	####################
@@ -97,15 +96,9 @@ table inet router {
 		oifname "lo" accept
 
 		ct state established,related accept
-		oifname $DEV_WORLD jump outbound_world
 		oifname $DEV_PRIVATE jump outbound_private
 		oifname $DEV_WG jump outbound_wireguard
-	}
-
-	chain outbound_world {
-		# 防止 NAT 泄漏
-		meta nfproto ipv4 ct state invalid counter drop
-		accept
+		oifname $DEV_WORLD jump outbound_world
 	}
 
 	chain outbound_private {
@@ -113,6 +106,12 @@ table inet router {
 	}
 
 	chain outbound_wireguard {
+		# 防止 NAT 泄漏
+		meta nfproto ipv4 ct state invalid counter drop
+		accept
+	}
+
+	chain outbound_world {
 		# 防止 NAT 泄漏
 		meta nfproto ipv4 ct state invalid counter drop
 		accept
