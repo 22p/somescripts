@@ -29,30 +29,31 @@ table inet router {
 		iifname $DEV_PRIVATE jump inbound_private
 		iifname $DEV_WG jump inbound_wireguard
 		iifname $DEV_WORLD jump inbound_world
-		counter jump handle_reject
+		jump handle_reject
 	}
 
 	chain inbound_private {
 		# 如果来自私有网络且 MAC 地址在封禁列表中，则丢弃
 		# ether saddr $BANNED_MAC counter drop
-		counter accept
+		accept
 	}
 
 	chain inbound_wireguard {
-		counter accept
+		accept
 	}
 
 	chain inbound_world {
-		meta nfproto ipv4 udp dport 68 counter accept # Allow-DHCP-Renew
-		meta nfproto ipv4 icmp type 8 counter accept # Allow-Ping
+		icmp type 8 counter accept # Allow-Ping
+		icmpv6 type 128 counter accept # Allow-Ping6
+		icmpv6 type { 1, 2, 3, 4 } counter accept # Allow-Basic-errors
+		icmpv6 type { 133, 134, 135, 136 } limit rate 1000/second counter accept # Allow-NDP
+		ip6 saddr fe80::/10 icmpv6 type { 130, 131, 132, 143 } limit rate 1000/second counter accept # Allow-MLD
 		meta nfproto ipv4 meta l4proto igmp counter accept # Allow-IGMP
+		meta nfproto ipv4 udp dport 68 counter accept # Allow-DHCP-Renew
 		meta nfproto ipv6 udp dport 546 counter accept # Allow-DHCPv6
-		ip6 saddr fe80::/10 icmpv6 type . icmpv6 code { 130 . 0, 131 . 0, 132 . 0, 143 . 0 } counter accept # Allow-MLD
-		meta nfproto ipv6 icmpv6 type { 128, 129, 1, 3, 133, 134 } limit rate 1000/second counter accept # Allow-ICMPv6-Input
-		meta nfproto ipv6 icmpv6 type . icmpv6 code { 2 . 0, 4 . 0, 4 . 1, 135 . 0, 136 . 0 } limit rate 1000/second counter accept # Allow-ICMPv6-Input
 		tcp dport 22 counter accept # Allow-SSH
 		udp dport 6699 counter accept # Allow-WireGuard
-		counter jump handle_reject
+		jump handle_reject
 	}
 
 	####################
@@ -61,12 +62,12 @@ table inet router {
 	chain forward {
 		type filter hook forward priority filter; policy drop;
 
-		meta l4proto { tcp, udp } flow offload @ft;
+		meta l4proto { tcp, udp } flow offload @ft
 		ct state established,related accept
 		iifname $DEV_PRIVATE jump forward_private
 		iifname $DEV_WG jump forward_wireguard
 		iifname $DEV_WORLD jump forward_world
-		counter jump handle_reject
+		jump handle_reject
 	}
 
 	chain forward_private {
@@ -79,8 +80,8 @@ table inet router {
 	}
 
 	chain forward_world {
-		meta nfproto ipv6 icmpv6 type { 128, 129, 1, 3 } limit rate 1000/second counter accept # Allow-ICMPv6-Forward
-		meta nfproto ipv6 icmpv6 type . icmpv6 code { 2 . 0, 4 . 0, 4 . 1 } limit rate 1000/second counter accept # Allow-ICMPv6-Forward
+		icmpv6 type 128 counter accept # Allow-Ping6
+		icmpv6 type { 1, 2, 3, 4 } counter accept # Allow-Basic-errors
 		meta l4proto esp counter oifname $DEV_PRIVATE counter accept # Allow-IPSec-ESP
 		udp dport 500 counter oifname $DEV_PRIVATE counter accept # Allow-ISAKMP
 		# meta nfproto ipv6 oifname $DEV_PRIVATE counter accept # 暴露内部网络设备 IPv6 到公网
@@ -104,17 +105,17 @@ table inet router {
 	chain outbound_world {
 		# 防止 NAT 泄漏
 		meta nfproto ipv4 ct state invalid counter drop
-		counter accept
+		accept
 	}
 
 	chain outbound_private {
-		counter accept
+		accept
 	}
 
 	chain outbound_wireguard {
 		# 防止 NAT 泄漏
 		meta nfproto ipv4 ct state invalid counter drop
-		counter accept
+		accept
 	}
 
 	####################
