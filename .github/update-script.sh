@@ -51,7 +51,7 @@ docker run --rm -v "$(pwd)":/conf ghcr.io/sagernet/sing-box:latest rule-set comp
 tr "\n" "/" < accelerated-domains.china.conf >tmp.china.conf
 sed -i \
     -e 's|^|/|' \
-    -e 's|\(.*\)|[\1]h3://223.5.5.5|' \
+    -e 's|\(.*\)|[\1]h3://223.5.5.5/dns-query|' \
     -e '$ahttps://1.1.1.1/dns-query' \
     -e '$ahttps://8.8.8.8/dns-query' \
     tmp.china.conf
