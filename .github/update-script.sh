@@ -29,9 +29,11 @@ popd >/dev/null
 
 # AdGuardHome
 pushd ../AdGuardHome >/dev/null || exit
-curl -sLO https://raw.githubusercontent.com/felixonmars/dnsmasq-china-list/master/accelerated-domains.china.conf
+curl -sL https://raw.githubusercontent.com/felixonmars/dnsmasq-china-list/master/accelerated-domains.china.conf | awk -F '/' '{if (NF >= 2) print $2}' >accelerated-domains.china.conf
+curl -sL https://raw.githubusercontent.com/felixonmars/dnsmasq-china-list/master/apple.china.conf | awk -F '/' '{if (NF >= 2) print $2}' >>accelerated-domains.china.conf
+curl -sL https://raw.githubusercontent.com/felixonmars/dnsmasq-china-list/master/google.china.conf | awk -F '/' '{if (NF >= 2) print $2}' >>accelerated-domains.china.conf
 
-domains=$(awk -F'/' '{print "\""$2"\""}' accelerated-domains.china.conf | paste -sd "," -)
+domains=$(sed 's/^/"/;s/$/"/' accelerated-domains.china.conf | paste -sd ",")
 echo '{
   "version": 1,
   "rules": [
@@ -46,11 +48,14 @@ echo '{
 # sing-box rule-set compile --output ./accelerated-domains.china.srs ./accelerated-domains.china.json
 docker run --rm -v "$(pwd)":/conf ghcr.io/sagernet/sing-box:latest rule-set compile --output /conf/accelerated-domains.china.srs /conf/accelerated-domains.china.json
 
+tr "\n" "/" < accelerated-domains.china.conf >tmp.china.conf
 sed -i \
-    -e 's/server=\/\(.*\)\//\[\/\1\/\]/g' \
-    -e 's/114\.114\.114\.114/h3:\/\/223\.5\.5\.5\/dns-query/g' \
-    -e '$ a\https://1.1.1.1\/dns-query\nhttps://8.8.8.8\/dns-query' \
-    accelerated-domains.china.conf
+    -e 's|^|/|' \
+    -e 's|\(.*\)|[\1]h3//223.5.5.5|' \
+    -e '$ahttps://1.1.1.1/dns-query' \
+    -e '$ahttps://8.8.8.8/dns-query' \
+    tmp.china.conf
+mv tmp.china.conf accelerated-domains.china.conf
 popd >/dev/null
 
 # nftables
