@@ -18,23 +18,19 @@ include "/etc/nftables/proxy/ip6_cn.nft"
 
 chain prerouting {
 	type filter hook prerouting priority mangle; policy accept;
-	ip daddr @ip4_reserved return
-	ip6 daddr @ip6_reserved return
-	ip daddr @ip4_cn return
-	ip6 daddr @ip6_cn return
-	ip daddr 192.168.0.0/16 tcp dport != 53 return
-	ip daddr 192.168.0.0/16 udp dport != 53 return
+	ip daddr @ip4_reserved th dport != 53 return
+	ip6 daddr @ip6_reserved th dport != 53 return
+	ip daddr @ip4_cn th dport != 53 return
+	ip6 daddr @ip6_cn th dport != 53 return
 	meta l4proto { tcp, udp } tproxy to :$TPROXY_PORT meta mark set $FWMARK accept
 }
 
 chain output {
 	type route hook output priority mangle; policy accept;
-	ip daddr @ip4_reserved return
-	ip6 daddr @ip6_reserved return
-	ip daddr @ip4_cn return
-	ip6 daddr @ip6_cn return
-	ip daddr 192.168.0.0/16 tcp dport != 53 return
-	ip daddr 192.168.0.0/16 udp dport != 53 return
+	ip daddr @ip4_reserved th dport != 53 return
+	ip6 daddr @ip6_reserved th dport != 53 return
+	ip daddr @ip4_cn th dport != 53 return
+	ip6 daddr @ip6_cn th dport != 53 return
 	meta l4proto { tcp, udp } meta mark set $FWMARK
 }
 }
