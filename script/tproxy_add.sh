@@ -3,7 +3,7 @@
 FWMARK=0x440
 if [ "$1" = "add" ]; then 
   if ! ip rule | grep $FWMARK >/dev/null 2>&1; then 
-  nft -f /etc/nftables/tproxy/tproxy.nft
+  nft -f /etc/nftables/proxy/tproxy.nft
   ip rule add fwmark $FWMARK table 100
   ip route add local default dev lo table 100
   ip -6 rule add fwmark $FWMARK table 100
@@ -12,7 +12,7 @@ if [ "$1" = "add" ]; then
   fi
 elif [ "$1" = "del" ]; then
   if ip rule | grep $FWMARK >/dev/null 2>&1; then
-  nft delete table inet TProxy
+  nft delete table inet proxy
   ip route del local default dev lo table 100
   ip rule del table 100
   ip -6 route del local default dev lo table 100

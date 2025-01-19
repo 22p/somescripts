@@ -5,16 +5,16 @@ define TPROXY_PORT = 12345
 # 修改为你的mark值
 define FWMARK = 0x440
 
-table inet TProxy
-delete table inet TProxy
+table inet proxy
+delete table inet proxy
 
-table inet TProxy {
+table inet proxy {
 ## 保留 ip 地址
-include "/etc/nftables/tproxy/ip_reserved.nft"
+include "/etc/nftables/proxy/ip_reserved.nft"
 ## 大陆 ipv4 地址
-include "/etc/nftables/tproxy/ip4_cn.nft"
+include "/etc/nftables/proxy/ip4_cn.nft"
 ## 大陆 ipv6 地址
-include "/etc/nftables/tproxy/ip6_cn.nft"
+include "/etc/nftables/proxy/ip6_cn.nft"
 
 chain prerouting {
 	type filter hook prerouting priority mangle; policy accept;
@@ -22,6 +22,8 @@ chain prerouting {
 	ip6 daddr @ip6_reserved return
 	ip daddr @ip4_cn return
 	ip6 daddr @ip6_cn return
+	ip daddr 192.168.0.0/16 tcp dport != 53 return
+	ip daddr 192.168.0.0/16 udp dport != 53 return
 	meta l4proto { tcp, udp } tproxy to :$TPROXY_PORT meta mark set $FWMARK accept
 }
 
@@ -31,6 +33,8 @@ chain output {
 	ip6 daddr @ip6_reserved return
 	ip daddr @ip4_cn return
 	ip6 daddr @ip6_cn return
+	ip daddr 192.168.0.0/16 tcp dport != 53 return
+	ip daddr 192.168.0.0/16 udp dport != 53 return
 	meta l4proto { tcp, udp } meta mark set $FWMARK
 }
 }

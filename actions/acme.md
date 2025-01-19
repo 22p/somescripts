@@ -7,7 +7,6 @@
      example.com,cloudflare,letsencrypt
      example.com,cloudflare,zerossl,,,15
      example.com,cloudflare,google,--eab,30,15
-     example.com,cloudflare,trustasia,--eab
      ```
    - `DNS_API`：DNS API 配置，一行一个，需要在末尾加反斜杠，例如：
      ```
@@ -21,7 +20,7 @@
      ```
      CF_DNS_API_TOKEN="***" ./lego --accept-tos \
        --email ssl@example.com --dns cloudflare \
-       --server https://acme.trustasia.com/v2/DV90/directory \
+       --server https://dv.acme-v02.api.pki.goog/directory \
        --eab --kid *** --hmac ***  --domains example.com run
      ```
    - `CERT_EMAIL`：注册 ACME 的电子邮件地址。

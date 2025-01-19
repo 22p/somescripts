@@ -59,7 +59,7 @@ mv tmp.china.conf accelerated-domains.china.conf
 popd >/dev/null
 
 # nftables
-pushd ../nftables/tproxy >/dev/null || exit
+pushd ../nftables/proxy >/dev/null || exit
 curl -sLo ip4_cn.nft https://ispip.clang.cn/all_cn.txt
 sed -i \
     -e '$!s/$/,/' \
