@@ -1,0 +1,11 @@
+[connection]
+id=bridge-slave-eno1
+type=ethernet
+controller=br0
+interface-name=eno1
+port-type=bridge
+
+[ethernet]
+mtu=9000
+
+[bridge-port]

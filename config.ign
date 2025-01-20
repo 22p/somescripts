@@ -1,0 +1,32 @@
+{
+  "ignition": {
+    "version": "3.5.0"
+  },
+  "passwd": {
+    "users": [
+      {
+        "name": "core",
+        "sshAuthorizedKeys": [
+          "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIF5jkBwSedZALl/iV9saZP77FP9HR++sWKB3TuM2oSnz i@ii.cx"
+        ]
+      }
+    ]
+  },
+  "storage": {
+    "files": [
+      {
+        "path": "/etc/zincati/config.d/55-updates-strategy.toml",
+        "contents": {
+          "compression": "gzip",
+          "source": "data:;base64,H4sIAAAAAAAC/2SNsQqDUAxF93xFyFysIHQoOPQbHOUhoS9ooEbxRcR+fcng1PVyzrn9vmZ2KQmKb+wyntgirbLpkvVNABdQXVsC11mG72IS6Kso37uJbZxYg/8TqkMtL0dKkPks2GKP1LHTDanbjTCuefMhslGsm2dTE3zERp+GWW13Ce1Rwy8AAP//AZSlT64AAAA="
+        }
+      }
+    ],
+    "links": [
+      {
+        "path": "/etc/localtime",
+        "target": "../usr/share/zoneinfo/Asia/Shanghai"
+      }
+    ]
+  }
+}
