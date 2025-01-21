@@ -1,3 +1,4 @@
+# podman run --interactive -v .:/data:z --rm quay.io/coreos/butane:release -d /data  --pretty --strict < router.bu > router.ign
 variant: fcos
 version: 1.6.0
 passwd:
