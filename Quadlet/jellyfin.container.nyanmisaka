@@ -11,7 +11,7 @@ Environment=TZ=Asia/Shanghai
 Volume=../../../containers/jellyfin:/config:Z
 # Volume=/opt/data:/data:ro,z
 Network=pasta
-PublishPort=8906:8096
+PublishPort=8096:8096
 
 [Service]
 Restart=always
