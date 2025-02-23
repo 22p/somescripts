@@ -1,17 +1,18 @@
+# mkdir -p ~/containers/aria2
+# curl -Lo ~/containers/aria2/aria2.env https://raw.githubusercontent.com/22p/somescripts/refs/heads/main/Quadlet/data/aria2.env
 [Unit]
 Description=aria2-ui Quadlet
 
 [Container]
-Image=docker.io/hurlenko/aria2-ariang
+Image=docker.io/hurlenko/aria2-ariang:latest
 ContainerName=aria2-ui
 AutoUpdate=registry
 Environment=TZ=Asia/Shanghai
-Environment=ARIA2RPCPORT=443
-Environment=RPC_SECRET=*****secret*****
-Volume=/opt/data/download:/aria2/data
-Volume=/opt/podman/aria2:/aria2/conf
-Network=pasta:-i,br0
-PublishPort=127.0.10.3:9999:8080
+EnvironmentFile=../../../containers/aria2/aria2.env
+Volume=../../../containers/vw-data:/aria2/conf:Z
+Volume=/opt/data/download:/aria2/data:z
+Network=pasta
+PublishPort=127.0.0.1:8080:8080
 
 [Service]
 Restart=always
