@@ -11,21 +11,21 @@ Image=docker.io/library/debian:bookworm-slim
 ContainerName=cloudreve
 AutoUpdate=registry
 Environment=TZ=Asia/Shanghai
-Volume=../../../containers/cloudreve/uploads:/cloudreve/uploads:Z
-Volume=../../../containers/cloudreve/conf.ini:/cloudreve/conf.ini:Z
-Volume=../../../containers/cloudreve/cloudreve.db:/cloudreve/cloudreve.db:Z
-Volume=../../../containers/cloudreve/avatar:/cloudreve/avatar:Z
-Volume=../../../containers/socket/cloudreve:/dev/shm:z
+Volume=%h/containers/cloudreve/uploads:/cloudreve/uploads:Z
+Volume=%h/containers/cloudreve/conf.ini:/cloudreve/conf.ini:Z
+Volume=%h/containers/cloudreve/cloudreve.db:/cloudreve/cloudreve.db:Z
+Volume=%h/containers/cloudreve/avatar:/cloudreve/avatar:Z
+Volume=%h/containers/socket/cloudreve:/dev/shm:z
 # pro add ↓
-Volume=../../../containers/cloudreve/cloudreve:/cloudreve/cloudreve:Z
-Volume=../../../containers/cloudreve/key.bin:/cloudreve/key.bin:Z
+Volume=%h/containers/cloudreve/cloudreve:/cloudreve/cloudreve:Z
+Volume=%h/containers/cloudreve/key.bin:/cloudreve/key.bin:Z
 Exec=/cloudreve/cloudreve
 Network=pasta:-T,6379
 
 [Service]
 Restart=always
 TimeoutStartSec=900
-ExecStartPre=/usr/bin/rm -f /home/nyxara/containers/socket/cloudreve/cloudreve.socket
+ExecStartPre=/usr/bin/rm -f %h/containers/socket/cloudreve/cloudreve.socket
 
 [Install]
 WantedBy=multi-user.target default.target

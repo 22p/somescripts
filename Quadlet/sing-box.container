@@ -7,8 +7,8 @@ Image=ghcr.io/sagernet/sing-box:latest
 ContainerName=sing-box
 AutoUpdate=registry
 Environment=TZ=Asia/Shanghai
-Volume=../../../containers/sing-box:/app:Z
-Volume=../../../containers/cert:/cert:ro,z
+Volume=%h/containers/sing-box:/app:Z
+Volume=%h/containers/cert:/cert:ro,z
 Exec=run -C /app
 Network=pasta
 PublishPort=127.0.0.1:12345:12345

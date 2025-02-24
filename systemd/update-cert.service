@@ -3,8 +3,8 @@ Description=Execute Update-cert script
 
 [Service]
 Type=oneshot
-EnvironmentFile=/opt/script/.env
-ExecStart=/opt/script/update-cert.sh
+EnvironmentFile=%h/bin/.env
+ExecStart=%h/bin/update-cert.sh
 
 [Install]
 WantedBy=default.target

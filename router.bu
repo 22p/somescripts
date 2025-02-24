@@ -61,9 +61,7 @@ storage:
     # ====================
     - path: /etc/systemd/resolved.conf
       contents:
-        inline: |
-          [Resolve]
-          FallbackDNS=8.8.8.8 8.8.4.4
+        local: etc/systemd/resolved.conf
 
     # ====================
     # 设置 用户容器

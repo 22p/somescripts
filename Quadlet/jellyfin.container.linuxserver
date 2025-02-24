@@ -10,8 +10,8 @@ AddDevice=/dev/dri:/dev/dri
 Environment=PUID=0
 Environment=PGID=0
 Environment=TZ=Asia/Shanghai
-Volume=../../../containers/jellyfin:/config:Z
-Volume=../../../containers/fonts:/usr/share/fonts/opentype:ro,z
+Volume=%h/containers/jellyfin:/config:Z
+Volume=%h/containers/fonts:/usr/share/fonts/opentype:ro,z
 # Volume=/opt/data:/data:ro,z
 Network=pasta
 PublishPort=8096:8096

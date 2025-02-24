@@ -1,4 +1,5 @@
-# mkdir -p /opt/containers/sing-box/{conf,work}
+# 需要rootful模式
+# mkdir -p ~/containers/sing-box/{conf,work}
 # mkdir -p /etc/nftables/proxy
 # curl -Lo /etc/nftables/proxy/ip_reserved.nft https://github.com/22p/somescripts/raw/refs/heads/main/nftables/proxy/ip_reserved.nft
 # curl -Lo /etc/nftables/proxy/ip4_cn.nft https://github.com/22p/somescripts/raw/refs/heads/main/nftables/proxy/ip4_cn.nft
@@ -12,7 +13,7 @@ Image=ghcr.io/sagernet/sing-box:latest
 ContainerName=sing-box
 AutoUpdate=registry
 Environment=TZ=Asia/Shanghai
-Volume=/opt/containers/sing-box:/app:Z
+Volume=%h/containers/sing-box:/app:Z
 Exec=run -C /app/conf -D /app/work
 AddCapability=CAP_NET_RAW
 Network=host

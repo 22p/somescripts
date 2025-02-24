@@ -9,8 +9,8 @@ Image=ghcr.io/dani-garcia/vaultwarden:latest
 ContainerName=vaultwarden
 AutoUpdate=registry
 Environment=TZ=Asia/Shanghai
-EnvironmentFile=../../../containers/vw-data/vaultwarden.env
-Volume=../../../containers/vw-data:/data:Z
+EnvironmentFile=%h/containers/vw-data/vaultwarden.env
+Volume=%h/containers/vw-data:/data:Z
 Network=pasta
 PublishPort=127.0.0.1:9999:80
 

@@ -9,16 +9,16 @@ Image=docker.io/filebrowser/filebrowser:latest
 ContainerName=filebrowser
 AutoUpdate=registry
 Environment=TZ=Asia/Shanghai
-Volume=../../../containers/filebrowser/database.db:/database.db:Z
-Volume=../../../containers/filebrowser/.filebrowser.json:/.filebrowser.json:Z
-Volume=../../../containers/socket/filebrowser:/dev/shm:z
+Volume=%h/containers/filebrowser/database.db:/database.db:Z
+Volume=%h/containers/filebrowser/.filebrowser.json:/.filebrowser.json:Z
+Volume=%h/containers/socket/filebrowser:/dev/shm:z
 # Volume=/opt/data:/srv:z
 Network=none
 
 [Service]
 Restart=always
 TimeoutStartSec=900
-ExecStartPre=/bin/rm -f /home/nyxara/containers/socket/filebrowser/filebrowser.socket
+ExecStartPre=/bin/rm -f %h/containers/socket/filebrowser/filebrowser.socket
 
 [Install]
 WantedBy=multi-user.target default.target
