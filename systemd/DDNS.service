@@ -3,8 +3,8 @@ Description=Execute DDNS script
 
 [Service]
 Type=oneshot
-EnvironmentFile=/opt/script/.env
-ExecStart=/opt/script/cf_ddns.sh
+EnvironmentFile=%h/.config/.cf_ddns.env
+ExecStart=%h/bin/cf_ddns.sh
 
 [Install]
 WantedBy=default.target
