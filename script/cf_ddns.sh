@@ -77,7 +77,7 @@ update_dns_https_record() {
   [[ -n "$IPv6" ]] && value_params+="ipv6hint=$IPv6 "
   value_params="${value_params%% }"
 
-  data_json=$(jq -n \
+  local data_json=$(jq -n \
     --arg type "$record_type" \
     --arg name "$FULL_DOMAIN" \
     --arg value "$value_params" \
