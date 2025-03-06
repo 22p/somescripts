@@ -15,7 +15,7 @@
       "tag": "proxy",
       "outbounds": [
         "节点1",
-        "节点2"
+        "节点2",
         "auto"
       ],
       "default": "auto"

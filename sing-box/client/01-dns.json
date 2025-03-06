@@ -38,6 +38,7 @@
         ],
         "server": "dns_direct"
       }
-    ]
+    ],
+    "strategy": "prefer_ipv6"
   }
 }

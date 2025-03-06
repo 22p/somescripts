@@ -16,14 +16,25 @@
       },
       {
         "type": "logical",
-        "mode": "or",
+        "mode": "and",
         "rules": [
           {
-            "port": 853
+            "rule_set": "geoip-cn",
+            "invert": true
           },
           {
             "network": "udp",
             "port": 443
+          }
+        ],
+        "action": "reject"
+      },
+      {
+        "type": "logical",
+        "mode": "or",
+        "rules": [
+          {
+            "port": 853
           },
           {
             "protocol": "stun"
