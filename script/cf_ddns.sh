@@ -52,32 +52,51 @@ get_zone_and_record_id() {
 
 # 定义更新DNS记录的函数
 update_dns_record() {
-  local record_id="$1"
-  local ip="$2"
-  local record_type="$3"
+  local record_id="$1" ip="$2" record_type="$3"
+  local data_json=$(jq -n \
+    --arg type "$record_type" \
+    --arg name "$FULL_DOMAIN" \
+    --arg content "$ip" \
+    '{type: $type, name: $name, content: $content, ttl: 60, proxied: false}')
 
   curl -s -X PUT "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/dns_records/$record_id" \
     -H "Authorization: Bearer $CF_TOKEN" \
     -H "Content-Type: application/json" \
-    --data '{"type":"'$record_type'","name":"'$FULL_DOMAIN'","content":"'$ip'","ttl":60,"proxied":false}' | jq -r '.success'
+    --data "$data_json" | jq -r '.success'
 }
 
 # 定义更新DNS HTTPS记录的函数
 update_dns_https_record() {
-  local record_id="$1"
-  local record_type="$2"
-  local data_content="\"priority\":1,\"target\":\".\",\"value\":\""
+  local record_id="$1" record_type="$2"
+  local value_params=""
 
-  [[ -n "$HTTPS_ALPN" ]] && data_content+='alpn=\"'$HTTPS_ALPN'\" '
-  [[ -n "$HTTPS_PORT" ]] && data_content+='port=\"'$HTTPS_PORT'\" '
-  [[ -n "$ECH" ]] && data_content+='ech=\"'$ECH'\" '
-  [[ -n "$IPv4" ]] && data_content+='ipv4hint=\"'$IPv4'\" '
-  [[ -n "$IPv6" ]] && data_content+='ipv6hint=\"'$IPv6'\" '
+  [[ -n "$HTTPS_ALPN" ]] && value_params+="alpn=$HTTPS_ALPN "
+  [[ -n "$HTTPS_PORT" ]] && value_params+="port=$HTTPS_PORT "
+  [[ -n "$ECH" ]] && value_params+="ech=$ECH "
+  [[ -n "$IPv4" ]] && value_params+="ipv4hint=$IPv4 "
+  [[ -n "$IPv6" ]] && value_params+="ipv6hint=$IPv6 "
+  value_params="${value_params%% }"
+
+  data_json=$(jq -n \
+    --arg type "$record_type" \
+    --arg name "$FULL_DOMAIN" \
+    --arg value "$value_params" \
+    '{
+      type: $type,
+      name: $name,
+      data: {
+        priority: 1,
+        target: ".",
+        value: $value
+      },
+      ttl: 1,
+      proxied: false
+    }')
 
   curl -s -X PUT "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/dns_records/$record_id" \
     -H "Authorization: Bearer $CF_TOKEN" \
     -H "Content-Type: application/json" \
-    --data "{\"type\":\"$record_type\",\"name\":\"$FULL_DOMAIN\",\"data\":{$data_content\"},\"ttl\":1,\"proxied\":false}" | jq -r '.success'
+    --data "$data_json" | jq -r '.success'
 }
 
 if [ "$IPv6" != "$OLD_IP" ]; then
@@ -95,7 +114,7 @@ if [ "$IPv6" != "$OLD_IP" ]; then
     echo "Renew IPv4: $IPv4, IPv6: $IPv6"
     send_notifications "⟦Renew IP⟧⟦$SRV_NAME⟧" "IPv4: \`$IPv4\`
 IPv6: \`$IPv6\`" "$SRV_NAME" minuet
-    echo $IPv6 >/tmp/last_ip.txt
+    echo "$IPv6" >/tmp/last_ip.txt
   else
     echo "Update ERROR :-C"
     send_notifications "⟦Renew IP⟧⟦$SRV_NAME⟧" "Update ERROR" "$SRV_NAME" minuet
