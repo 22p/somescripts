@@ -52,7 +52,8 @@
       },
       {
         "rule_set": [
-          "geosite-category-ads-all"
+          "geosite-category-ads-all",
+          "geosite-baidu"
         ],
         "action": "reject"
       },
@@ -81,6 +82,13 @@
         "tag": "geosite-geolocation-cn",
         "format": "binary",
         "url": "https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-geolocation-cn.srs",
+        "download_detour": "proxy"
+      },
+      {
+        "type": "remote",
+        "tag": "geosite-baidu",
+        "format": "binary",
+        "url": "https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-baidu.srs",
         "download_detour": "proxy"
       },
       {

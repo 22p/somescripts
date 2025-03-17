@@ -1,13 +1,13 @@
-/opt/podman/www/wwwlogs/*.log {
+/var/home/nyxara/containers/www/wwwlogs/*.log {
     daily
     missingok
     rotate 7
     compress
     delaycompress
     notifempty
-    create 0660 core core
+    create 0660 nyxara nyxara
     sharedscripts
     postrotate
-        kill -USR1 $(pgrep nginx) > /dev/null 2>&1 || true
+        runuser -u nyxara -- pkill -USR1 nginx > /dev/null 2>&1 || true
     endscript
 }

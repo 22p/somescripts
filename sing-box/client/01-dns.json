@@ -33,6 +33,13 @@
       },
       {
         "rule_set": [
+          "geosite-baidu"
+        ],
+        "action": "reject",
+        "method": "default"
+      },
+      {
+        "rule_set": [
           "geosite-geolocation-cn",
           "accelerated-domains-china"
         ],
