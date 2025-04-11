@@ -5,10 +5,12 @@
 # source .env
 ROOT_DOMAIN=$(echo $FULL_DOMAIN | cut -d '.' -f2-)
 OLD_IP=$(cat /tmp/last_ip.txt 2>/dev/null)
-IPv4=$(ip addr show $NIC scope global | grep -oP 'inet \K[\da-f.:]+')
-IPv6=$(ip addr show $NIC scope global | grep -oP 'inet6 \K[\da-f.:]+')
-#IPv4=$(ip -4 addr show $NIC scope global | grep inet | awk '{print $2}' | cut -d'/' -f1)
-#IPv6=$(ip -6 addr show $NIC scope global | grep inet | awk '{print $2}' | cut -d'/' -f1)
+IPv4=$(ip addr show $NIC scope global | grep -oP 'inet \K[\da-f.:]+' | head -n 1)
+IPv6=$(ip -6 addr show $NIC scope global | grep -v deprecated | grep -oP 'inet6 \K[\da-f:]+' | head -n 1)
+#IPv4=$(ip -4 addr show $NIC scope global | awk '/inet / {sub(/\/.*/, "", $2); print $2; exit}')
+#IPv6=$(ip -6 addr show $NIC scope global | awk '/inet6 / && !/deprecated/ {sub(/\/.*/, "", $2); print $2; exit}')
+#IPv4=$(curl -s -4 ip.sb)
+#IPv4=$(curl -s -6 ip.sb)
 
 # send_notifications "标题" "内容" [消息分组] [通知铃声]
 send_notifications() {
