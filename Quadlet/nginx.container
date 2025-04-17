@@ -1,0 +1,27 @@
+# mkdir -p ~/containers/{www/{conf.d,wwwroot/{default,file},wwwlogs},cert,socket}
+# curl -Lo ~/containers/www/nginx.conf https://raw.githubusercontent.com/22p/somescripts/refs/heads/main/Quadlet/data/nginx.conf
+[Unit]
+Description=Nginx Quadlet
+
+[Container]
+Image=docker.io/library/nginx:alpine
+ContainerName=nginx
+AutoUpdate=registry
+Environment=TZ=Asia/Shanghai
+Volume=%h/containers/www/nginx.conf:/etc/nginx/nginx.conf:ro,Z
+Volume=%h/containers/www/conf.d:/etc/nginx/conf.d:ro,Z
+Volume=%h/containers/www/wwwroot:/html:Z
+Volume=%h/containers/www/wwwlogs:/var/log/nginx:Z
+Volume=%h/containers/cert:/cert:ro,z
+Volume=%h/containers/socket:/dev/shm:z
+Network=pasta:-T,auto
+PublishPort=80:80
+PublishPort=443:443
+PublishPort=443:443/udp
+
+[Service]
+Restart=always
+TimeoutStartSec=900
+
+[Install]
+WantedBy=multi-user.target default.target

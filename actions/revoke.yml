@@ -1,0 +1,79 @@
+name: ssl revoke
+
+# 触发条件
+on:
+  workflow_dispatch:
+    inputs:
+      DOMAIN:
+        description: 'Specify the domain to add to the process.'
+        required: true
+        default: 'example.com'
+      ACME_SERVER:
+        description: 'Choose the Certificate Authority (CA) name.'
+        required: true
+        default: 'letsencrypt'
+        type: choice
+        options:
+          - letsencrypt
+          - google
+          - zerossl
+
+permissions:
+  contents: write
+  packages: read
+
+env:
+  TZ: Asia/Shanghai
+
+jobs:
+  ssl-cert-revoke:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🚚 Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: .lego
+
+      - name: 📦 Install latest lego
+        shell: bash
+        run: |
+          RELEASE_INFO=$(curl -s https://api.github.com/repos/go-acme/lego/releases/latest)
+          TAG_NAME=$(echo "$RELEASE_INFO" | jq -r '.tag_name')
+          DOWNLOAD_URL=$(echo "$RELEASE_INFO" | jq -r ".assets[] | select(.name == \"lego_${TAG_NAME}_linux_amd64.tar.gz\") | .browser_download_url")
+          curl -sLO "$DOWNLOAD_URL"
+          tar -xzf lego_*
+
+      - name: 🔐 Extract lego account
+        shell: bash
+        run: |
+          echo "${{ secrets.LEGO_ACCOUNT_TAR }}" | base64 -d | tar -C . -xz
+
+      - name: ❌ Revoke Certificate
+        shell: bash
+        run: |
+          ./lego \
+            --accept-tos \
+            --email ${{ secrets.CERT_EMAIL }} \
+            --server ${!ACME_SERVER} \
+            --eab \
+            --domains ${{ github.event.inputs.DOMAIN }} \
+            revoke
+        env:
+          ACME_SERVER: ${{ github.event.inputs.ACME_SERVER }}
+          letsencrypt: https://acme-v02.api.letsencrypt.org/directory
+          zerossl: https://acme.zerossl.com/v2/DV90
+          google: https://dv.acme-v02.api.pki.goog/directory
+
+      - name: 🧹 Clean Up & Push Changes
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          cd ./.lego
+          git add certificates
+          if git diff --cached --quiet; then
+            echo "✅ No certificate changes to commit."
+          else
+            git commit -m "❌ Revoke certificate for ${{ github.event.inputs.DOMAIN }}"
+            git push
+          fi

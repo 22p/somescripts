@@ -1,0 +1,10 @@
+[Unit]
+Description=Rclone
+After=network-online.target
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/rclone mount alist:/ /opt/alist --cache-dir /tmp --cache-dir /tmp --allow-other --vfs-cache-mode writes --allow-non-empty 
+Restart=on-abort
+ExecStop=/usr/bin/umount /opt/alist
+[Install]
+WantedBy=default.target

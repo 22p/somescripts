@@ -1,0 +1,22 @@
+# mkdir -p ~/containers/aria2
+# curl -Lo ~/container-configs/aria2.env https://raw.githubusercontent.com/22p/somescripts/refs/heads/main/Quadlet/data/aria2.env
+[Unit]
+Description=aria2-ui Quadlet
+
+[Container]
+Image=docker.io/hurlenko/aria2-ariang:latest
+ContainerName=aria2-ui
+AutoUpdate=registry
+Environment=TZ=Asia/Shanghai
+EnvironmentFile=%h/container-configs/aria2.env
+Volume=%h/containers/aria2:/aria2/conf:Z
+Volume=/opt/data/download:/aria2/data:z
+Network=pasta
+PublishPort=127.0.0.1:8080:8080
+
+[Service]
+Restart=always
+TimeoutStartSec=900
+
+[Install]
+WantedBy=multi-user.target default.target

@@ -1,0 +1,89 @@
+name: ssl automation
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 16 * * *'
+
+permissions:
+  contents: write
+  packages: read
+
+env:
+  TZ: Asia/Shanghai
+
+jobs:
+  ssl-cert-issuer:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🚚 Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: .lego
+
+      - name: 📦 Install latest lego
+        shell: bash
+        run: |
+          RELEASE_INFO=$(curl -s https://api.github.com/repos/go-acme/lego/releases/latest)
+          TAG_NAME=$(echo "$RELEASE_INFO" | jq -r '.tag_name')
+          DOWNLOAD_URL=$(echo "$RELEASE_INFO" | jq -r ".assets[] | select(.name == \"lego_${TAG_NAME}_linux_amd64.tar.gz\") | .browser_download_url")
+          curl -sLO "$DOWNLOAD_URL"
+          tar -xzf lego_*
+
+      - name: 🔐 Extract lego account
+        shell: bash
+        run: |
+          echo "${{ secrets.LEGO_ACCOUNT_TAR }}" | base64 -d | tar -C . -xz
+
+      - name: 📄 Issue or Renew Certificates
+        shell: bash
+        run: |
+          ${{ secrets.DNS_API }}
+          DOMAIN_LIST=(${{ secrets.DOMAIN_LIST }})
+
+          for DOMAIN_INFO in "${DOMAIN_LIST[@]}"; do
+            IFS=',' read -r DOMAIN DNS ACME_SERVER VALID_DAYS RENEW_BEFORE_DAYS <<< "$DOMAIN_INFO"
+
+            NOT_AFTER=""
+            if [[ -n "$VALID_DAYS" ]]; then
+              NOT_AFTER="--not-after=$(date -u -d "+$VALID_DAYS days" '+%Y-%m-%dT%H:%M:%SZ')"
+            fi
+
+            ACTION="renew --no-random-sleep --days ${RENEW_BEFORE_DAYS:-30}"
+            if [ ! -f "./.lego/certificates/$DOMAIN.crt" ]; then
+              ACTION="run"
+            fi
+
+            ./lego \
+              --accept-tos \
+              --email "${{ secrets.CERT_EMAIL }}" \
+              --dns "$DNS" \
+              --server "${!ACME_SERVER}" \
+              --domains "$DOMAIN" \
+              --domains "*.$DOMAIN" \
+              --eab \
+              $ACTION $NOT_AFTER
+          done
+        env:
+          letsencrypt: https://acme-v02.api.letsencrypt.org/directory
+          zerossl: https://acme.zerossl.com/v2/DV90
+          google: https://dv.acme-v02.api.pki.goog/directory
+
+      - name: ⬆️ Push Certificates to GitHub
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          cd ./.lego
+          git add certificates
+          if git diff --cached --quiet; then
+            echo "✅ No certificate changes detected."
+          else
+            git commit -m "🔒 Update certificates on $(date '+%Y-%m-%d %H:%M:%S')"
+            git push
+          fi
+
+      - name: 🚨 Send failure notification
+        if: failure()
+        run: |
+          curl -s -o /dev/null "https://api.day.app/${{ secrets.BARK_TOKEN }}/SSL%20Automation%20Failed/SSL%20automation%20has%20failed%20at%20$(date "+%Y-%m-%d%%20%H:%M:%S%%20%Z")?sound=update"

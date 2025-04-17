@@ -1,0 +1,7 @@
+[Service]
+Type=oneshot 
+ExecStart=setsebool container_use_dri_devices 1
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

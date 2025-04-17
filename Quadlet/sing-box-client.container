@@ -1,0 +1,45 @@
+# 需要rootful模式
+# mkdir -p ~/containers/sing-box/{conf,work}
+# mkdir -p /etc/nftables/proxy
+# curl -Lo /etc/nftables/proxy/ip_reserved.nft https://github.com/22p/somescripts/raw/refs/heads/main/nftables/proxy/ip_reserved.nft
+# curl -Lo /etc/nftables/proxy/ip4_cn.nft https://github.com/22p/somescripts/raw/refs/heads/main/nftables/proxy/ip4_cn.nft
+# curl -Lo /etc/nftables/proxy/ip6_cn.nft https://github.com/22p/somescripts/raw/refs/heads/main/nftables/proxy/ip6_cn.nft
+# curl -Lo /etc/nftables/proxy/tproxy.nft https://github.com/22p/somescripts/raw/refs/heads/main/nftables/proxy/tproxy.nft
+[Unit]
+Description=sing-box Quadlet
+
+[Container]
+Image=ghcr.io/sagernet/sing-box:latest
+ContainerName=sing-box
+AutoUpdate=registry
+Environment=TZ=Asia/Shanghai
+Volume=%h/containers/sing-box:/app:Z
+Exec=run -C /app/conf -D /app/work
+AddCapability=CAP_NET_RAW
+Network=host
+
+[Service]
+Restart=always
+TimeoutStartSec=900
+
+Environment=FWMARK=0x440
+ExecStartPre=/bin/bash -c 'if ! ip rule | grep $FWMARK >/dev/null 2>&1; then \
+  nft -f /etc/nftables/proxy/tproxy.nft; \
+  ip rule add fwmark $FWMARK table 100; \
+  ip route add local default dev lo table 100; \
+  ip -6 rule add fwmark $FWMARK table 100; \
+  ip -6 route add local default dev lo table 100; \
+  echo "ip rule has been added"; \
+fi'
+
+ExecStop=/bin/bash -c 'if ip rule | grep $FWMARK >/dev/null 2>&1; then \
+  nft delete table inet proxy; \
+  ip route del local default dev lo table 100; \
+  ip rule del table 100; \
+  ip -6 route del local default dev lo table 100; \
+  ip -6 rule del table 100; \
+  echo "ip rule has been deleted"; \
+fi'
+
+[Install]
+WantedBy=multi-user.target default.target

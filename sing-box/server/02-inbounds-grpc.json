@@ -1,0 +1,25 @@
+{
+  "inbounds": [
+    {
+      "type": "vless",
+      "tag": "vless-in",
+      "listen": "::",
+      "listen_port": 443,
+      "users": [
+        {
+          "name": "",
+          "uuid": "00000000-0000-0000-0000-000000000000"
+        }
+      ],
+      "tls": {
+        "enabled": true,
+        "certificate_path": "/cert/fullchain.pem",
+        "key_path": "/cert/private.key"
+      },
+      "transport": {
+        "type": "grpc",
+        "service_name": "0000"
+      }
+    }
+  ]
+}

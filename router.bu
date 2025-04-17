@@ -1,0 +1,123 @@
+# podman run --interactive -v .:/data:z --rm quay.io/coreos/butane:release -d /data  --pretty --strict < router.bu > router.ign
+variant: fcos
+version: 1.6.0
+passwd:
+  users:
+    - name: core
+      password_hash: $y$j9T$zWzj0gP6WeQtZggA5CdCC0$pYc34fhkWynhI.eY0F67Nzs.8TR4UQSLMBhtpEbwoS0
+      ssh_authorized_keys:
+        - ssh-ed25519 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIF5jkBwSedZALl/iV9saZP77FP9HR++sWKB3TuM2oSnz i@ii.cx
+
+storage:
+  # 设置时区
+  links:
+    - path: /etc/localtime
+      target: ../usr/share/zoneinfo/Asia/Shanghai
+
+  # 自动更新设置 周六周日凌晨三点 窗口期一小时
+  files:
+    - path: /etc/zincati/config.d/55-updates-strategy.toml
+      contents:
+        local: etc/zincati/config.d/55-updates-strategy.toml
+
+    # 内核调优
+    - path: /etc/sysctl.d/90-router-performance.conf
+      contents:
+        local: etc/sysctl.d/90-router-performance.conf
+
+    # 配置enp1s0 PPPoE拨号
+    # 需要安装 'rpm-ostree install -y NetworkManager-ppp'
+    # 先禁用后面再启用 'chmod 600 pppoe-enp1s0.nmconnection && nmcli connection reload'
+    - path: /etc/NetworkManager/system-connections/pppoe-enp1s0.nmconnection
+      mode: 0755
+      contents:
+        local: etc/NetworkManager/system-connections/pppoe-enp1s0.nmconnection
+
+    - path: /etc/NetworkManager/system-connections/br0.nmconnection
+      mode: 0600
+      contents:
+        local: etc/NetworkManager/system-connections/br0.nmconnection
+
+    # 设置桥接从属网卡enp2s0
+    - path: /etc/NetworkManager/system-connections/bridge-slave-enp2s0.nmconnection
+      mode: 0600
+      contents:
+        local: etc/NetworkManager/system-connections/bridge-slave-enp2s0.nmconnection
+
+    # 设置桥接从属网卡enp4s0
+    - path: /etc/NetworkManager/system-connections/bridge-slave-enp4s0.nmconnection
+      mode: 0600
+      contents:
+        local: etc/NetworkManager/system-connections/bridge-slave-enp4s0.nmconnection
+
+    # 设置桥接从属网卡eno1
+    - path: /etc/NetworkManager/system-connections/bridge-slave-eno1.nmconnection
+      mode: 0600
+      contents:
+        local: etc/NetworkManager/system-connections/bridge-slave-eno1.nmconnection
+
+    # ====================
+    # 设置 DNS
+    # ====================
+    - path: /etc/systemd/resolved.conf
+      contents:
+        local: etc/systemd/resolved.conf
+
+    # ====================
+    # 设置 用户容器
+    # ====================
+
+    # ====================
+    # 设置 防火墙
+    # ====================
+
+    - path: /etc/sysconfig/nftables.conf
+      append:
+        - inline: |
+            include "/etc/nftables/router.nft"
+
+    - path: /etc/nftables/router.nft
+      overwrite: true
+      contents:
+        local: nftables/router.nft
+
+    - path: /etc/nftables/proxy/ip4_cn.nft
+      contents:
+        local: nftables/proxy/ip4_cn.nft
+
+    - path: /etc/nftables/proxy/ip6_cn.nft
+      contents:
+        local: nftables/proxy/ip6_cn.nft
+
+    - path: /etc/nftables/proxy/ip_reserved.nft
+      contents:
+        local: nftables/proxy/ip_reserved.nft
+
+    - path: /etc/nftables/proxy/tproxy.nft
+      contents:
+        local: nftables/proxy/tproxy.nft
+
+    # 让用户注销后其会话仍保留运行
+    - path: /var/lib/systemd/linger/core
+      mode: 0644
+
+  directories:
+    - path: /etc/nftables/proxy
+
+systemd:
+  units:
+    - name: nftables.service
+      enabled: true
+      mask: false
+
+    # https://github.com/coreos/fedora-coreos-tracker/issues/701
+    # https://jellyfin.org/docs/general/installation/container#podman
+    - name: setsebool.service
+      enabled: true
+      contents: |
+        [Service]
+        Type=oneshot 
+        ExecStart=setsebool container_use_dri_devices 1
+        RemainAfterExit=yes
+        [Install]
+        WantedBy=multi-user.target

@@ -1,0 +1,6 @@
+[Unit]
+Description=Update SSL Certificates
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/update-cert.sh

@@ -1,0 +1,30 @@
+# podman run --interactive -v .:/data:z --rm quay.io/coreos/butane:release -d /data  --pretty --strict < config.bu > config.ign
+variant: fcos
+version: 1.6.0
+passwd:
+  users:
+    - name: core
+      ssh_authorized_keys:
+        - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIF5jkBwSedZALl/iV9saZP77FP9HR++sWKB3TuM2oSnz i@ii.cx
+
+storage:
+  # 设置时区
+  links:
+    - path: /etc/localtime
+      target: ../usr/share/zoneinfo/Asia/Shanghai
+
+  # 自动更新设置 周六周日凌晨三点 持续一小时
+  files:
+    - path: /etc/zincati/config.d/55-updates-strategy.toml
+      contents:
+        inline: |
+          [updates]
+          strategy = "periodic"
+          
+          [updates.periodic]
+          time_zone = "Asia/Shanghai"
+          
+          [[updates.periodic.window]]
+          days = [ "Sat", "Sun" ]
+          start_time = "03:30"
+          length_minutes = 60

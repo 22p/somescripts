@@ -1,0 +1,21 @@
+# 开启DHCP需要rootful模式
+# mkdir -p ~/containers/adguardhome/{conf,work}
+[Unit]
+Description=AdGuardHome Quadlet
+
+[Container]
+Image=docker.io/adguard/adguardhome:latest
+ContainerName=AdGuardHome
+AutoUpdate=registry
+Environment=TZ=Asia/Shanghai
+Volume=%h/containers/adguardhome/conf:/opt/adguardhome/conf:Z
+Volume=%h/containers/adguardhome/work:/opt/adguardhome/work:Z
+AddCapability=CAP_NET_RAW
+Network=host
+
+[Service]
+Restart=always
+TimeoutStartSec=900
+
+[Install]
+WantedBy=multi-user.target default.target

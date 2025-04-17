@@ -1,0 +1,17 @@
+[Unit]
+Description=Cloudflare Quadlet
+
+[Container]
+Image=docker.io/cloudflare/cloudflared:latest
+ContainerName=cloudflared
+AutoUpdate=registry
+Environment=TZ=Asia/Shanghai
+Network=host
+Exec=tunnel --no-autoupdate run --token *****token*****
+
+[Service]
+Restart=always
+TimeoutStartSec=900
+
+[Install]
+WantedBy=multi-user.target default.target

@@ -1,0 +1,14 @@
+{
+  "inbounds": [
+    {
+      "type": "shadowsocks",
+      "listen": "::",
+      "listen_port": 1024,
+      "method": "2022-blake3-aes-128-gcm",
+      "password": "password",
+      "multiplex": {
+        "enabled": true
+      }
+    }
+  ]
+}

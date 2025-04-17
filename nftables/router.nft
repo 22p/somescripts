@@ -1,0 +1,180 @@
+#!/usr/bin/nft -f
+
+flush ruleset
+
+define DEV_PRIVATE = { tun0, br0 }
+define DEV_WORLD = { ppp0, enp1s0 }
+define DEV_WG = wg0
+define NET_PRIVATE = 192.168.0.0/16
+# 封禁列表
+define BANNED_MAC = { f4:1c:71:1f:59:e8 }
+
+table inet router {
+
+	# Flowtable 设置
+	flowtable ft {
+		hook ingress priority 0;
+		devices = { eno1, enp1s0, enp2s0, enp4s0 };
+	}
+
+	####################
+	# Inbound 规则链
+	####################
+	chain inbound {
+		type filter hook input priority filter; policy drop;
+
+		iifname "lo" accept
+		ct state established,related accept
+		# 跳转到具体规则链
+		iifname $DEV_PRIVATE jump inbound_private
+		iifname $DEV_WG jump inbound_wireguard
+		iifname $DEV_WORLD jump inbound_world
+		jump handle_reject
+	}
+
+	chain inbound_private {
+		# 如果来自私有网络且 MAC 地址在封禁列表中，则丢弃
+		# ether saddr $BANNED_MAC counter drop
+		accept
+	}
+
+	chain inbound_wireguard {
+		accept
+	}
+
+	chain inbound_world {
+		icmp type 8 counter accept # Allow-Ping
+		icmpv6 type 128 counter accept # Allow-Ping6
+		icmpv6 type { 1, 2, 3, 4 } counter accept # Allow-Basic-errors
+		icmpv6 type { 133, 134, 135, 136 } limit rate 1000/second counter accept # Allow-NDP
+		ip6 saddr fe80::/10 icmpv6 type { 130, 131, 132, 143 } limit rate 1000/second counter accept # Allow-MLD
+		meta nfproto ipv4 meta l4proto igmp counter accept # Allow-IGMP
+		meta nfproto ipv4 udp dport 68 counter accept # Allow-DHCP-Renew
+		meta nfproto ipv6 udp dport 546 counter accept # Allow-DHCPv6
+		tcp dport 22 counter accept # Allow-SSH
+		udp dport 6699 counter accept # Allow-WireGuard
+		jump handle_reject
+	}
+
+	####################
+	# Forward 规则链
+	####################
+	chain forward {
+		type filter hook forward priority filter; policy drop;
+
+		meta l4proto { tcp, udp } flow offload @ft
+		ct state established,related accept
+		iifname $DEV_PRIVATE jump forward_private
+		iifname $DEV_WG jump forward_wireguard
+		iifname $DEV_WORLD jump forward_world
+		jump handle_reject
+	}
+
+	chain forward_private {
+		oifname $DEV_WG counter accept
+		oifname $DEV_WORLD counter accept
+	}
+
+	chain forward_wireguard {
+		oifname $DEV_PRIVATE counter accept
+	}
+
+	chain forward_world {
+		icmpv6 type 128 counter accept # Allow-Ping6
+		icmpv6 type { 1, 2, 3, 4 } counter accept # Allow-Basic-errors
+		meta l4proto esp counter oifname $DEV_PRIVATE counter accept # Allow-IPSec-ESP
+		udp dport 500 counter oifname $DEV_PRIVATE counter accept # Allow-ISAKMP
+		# meta nfproto ipv6 oifname $DEV_PRIVATE counter accept # 暴露内部网络设备 IPv6 到公网
+	}
+
+	####################
+	# Outbound 规则链
+	####################
+	chain outbound {
+		type filter hook output priority filter; policy accept;
+
+		oifname "lo" accept
+
+		ct state established,related accept
+		oifname $DEV_PRIVATE jump outbound_private
+		oifname $DEV_WG jump outbound_wireguard
+		oifname $DEV_WORLD jump outbound_world
+	}
+
+	chain outbound_private {
+		accept
+	}
+
+	chain outbound_wireguard {
+		# 防止 NAT 泄漏
+		meta nfproto ipv4 ct state invalid counter drop
+		accept
+	}
+
+	chain outbound_world {
+		# 防止 NAT 泄漏
+		meta nfproto ipv4 ct state invalid counter drop
+		accept
+	}
+
+	####################
+	# 拒绝处理
+	####################
+	chain handle_reject {
+		meta l4proto tcp reject with tcp reset
+		reject
+	}
+
+	####################
+	# Nat 规则链
+	####################
+	chain dstnat {
+		type nat hook prerouting priority dstnat; policy accept;
+	}
+
+	chain srcnat {
+		type nat hook postrouting priority srcnat; policy accept;
+		# 对 IPv4 外部流量进行伪装，将源地址转换为出口接口的公共 IP 地址
+		oifname $DEV_WORLD meta nfproto ipv4 masquerade
+		oifname $DEV_WG meta nfproto ipv4 masquerade
+	}
+
+	####################
+	# Raw 规则链 (notrack)
+	####################
+	chain raw_prerouting {
+		type filter hook prerouting priority raw; policy accept;
+	}
+
+	chain raw_output {
+		type filter hook output priority raw; policy accept;
+	}
+
+	####################
+	# Mangle 规则链
+	####################
+	chain mangle_prerouting {
+		type filter hook prerouting priority mangle; policy accept;
+		# meta iifname $DEV_WORLD return
+	}
+
+	chain mangle_postrouting {
+		type filter hook postrouting priority mangle; policy accept;
+		# MTU 钳制
+		oifname $DEV_WORLD tcp flags syn / syn,fin,rst tcp option maxseg size set rt mtu
+	}
+
+	chain mangle_input {
+		type filter hook input priority mangle; policy accept;
+	}
+
+	chain mangle_output {
+		type route hook output priority mangle; policy accept;
+	}
+
+	chain mangle_forward {
+		type filter hook forward priority mangle; policy accept;
+		# MTU 钳制
+		iifname $DEV_WORLD tcp flags syn / syn,fin,rst tcp option maxseg size set rt mtu
+	}
+}

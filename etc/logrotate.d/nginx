@@ -1,0 +1,13 @@
+/var/home/nyxara/containers/www/wwwlogs/*.log {
+    daily
+    missingok
+    rotate 7
+    compress
+    delaycompress
+    notifempty
+    create 0660 nyxara nyxara
+    sharedscripts
+    postrotate
+        runuser -u nyxara -- pkill -USR1 nginx > /dev/null 2>&1 || true
+    endscript
+}

@@ -1,0 +1,7 @@
+[Unit]
+Description=Execute DDNS script
+
+[Service]
+Type=oneshot
+EnvironmentFile=%h/.config/.cf_ddns.env
+ExecStart=%h/.local/bin/cf_ddns.sh

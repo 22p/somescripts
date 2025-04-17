@@ -1,0 +1,35 @@
+{
+  "outbounds": [
+    {
+      "tag": "节点1"
+    },
+    {
+      "tag": "节点2"
+    },
+    {
+      "type": "direct",
+      "tag": "direct"
+    },
+    {
+      "type": "selector",
+      "tag": "proxy",
+      "outbounds": [
+        "节点1",
+        "节点2",
+        "auto"
+      ],
+      "default": "auto"
+    },
+    {
+      "type": "urltest",
+      "tag": "auto",
+      "outbounds": [
+        "节点1",
+        "节点2"
+      ],
+      "url": "https://www.gstatic.com/generate_204",
+      "interval": "1m0s",
+      "tolerance": 50
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+name: Run Update Script
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 0 */30 * *"  # 每 30 天的 00:00 触发
+
+permissions:
+  contents: write
+  packages: read
+
+jobs:
+  run-script:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run update script
+        run: bash .github/update-script.sh
+
+      - name: Commit and push changes
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .
+          if [ -z "$(git diff --cached)" ]; then
+            echo "No changes to commit."
+          else
+            git commit -m "Auto-update by GitHub Action"
+            git push
+          fi

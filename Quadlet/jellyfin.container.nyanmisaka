@@ -1,0 +1,21 @@
+# mkdir -p ~/containers/jellyfin
+[Unit]
+Description=Jellyfin Quadlet
+
+[Container]
+Image=docker.io/nyanmisaka/jellyfin
+ContainerName=jellyfin
+AutoUpdate=registry
+AddDevice=/dev/dri:/dev/dri
+Environment=TZ=Asia/Shanghai
+Volume=%h/containers/jellyfin:/config:Z
+# Volume=/opt/data:/data:ro,z
+Network=pasta
+PublishPort=8096:8096
+
+[Service]
+Restart=always
+TimeoutStartSec=900
+
+[Install]
+WantedBy=multi-user.target default.target
