@@ -1,5 +1,7 @@
 #!/bin/bash
+set -euo pipefail
 
+# 配置项
 REPO_SSH="git@github.com:22p/ssl-automation"
 REPO_DIR="$HOME/.cache/ssl-automation"
 CERT_DIR="$HOME/containers/cert"
@@ -11,21 +13,16 @@ reload_service() {
 }
 
 if [ -d "$REPO_DIR/.git" ]; then
-  OLD_COMMIT=$(git -C "$REPO_DIR" rev-parse HEAD)
-
   git -C "$REPO_DIR" fetch origin
-  git -C "$REPO_DIR" reset --hard origin/HEAD 
-  NEW_COMMIT=$(git -C "$REPO_DIR" rev-parse HEAD)
-
-  if [ "$OLD_COMMIT" != "$NEW_COMMIT" ]; then
-    cp $REPO_DIR/certificates/"$DOMAIN".{crt,key} $CERT_DIR/
-    reload_service
-  fi
+  git -C "$REPO_DIR" reset --hard origin/HEAD
 else
   git clone "$REPO_SSH" "$REPO_DIR"
-  if [ $? -ne 0 ]; then
-    echo "[!] Git clone failed."
-    exit 1
-  fi
-  cp $REPO_DIR/certificates/"$DOMAIN".{crt,key} $CERT_DIR/
+fi
+
+if ! cmp -s "$REPO_DIR/certificates/$DOMAIN.crt" "$CERT_DIR/$DOMAIN.crt"; then
+  echo "Certificate updated, copying..."
+  cp "$REPO_DIR/certificates/$DOMAIN".{crt,key} "$CERT_DIR/"
+  reload_service
+else
+  echo "No changes in certificate."
 fi
