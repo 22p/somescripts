@@ -1,10 +1,72 @@
 {
   "outbounds": [
     {
-      "tag": "节点1"
+      "tag": "grpc节点",
+      "type": "vless",
+      "server": "127.0.0.1",
+      "server_port": 443,
+      "uuid": "00000000-0000-0000-0000-000000000000",
+      "tls": {
+        "enabled": true,
+        "server_name": "example.com",
+        "utls": {
+          "enabled": true,
+          "fingerprint": "chrome"
+        }
+      },
+      "transport": {
+        "type": "grpc",
+        "service_name": "0000000000"
+      }
     },
     {
-      "tag": "节点2"
+      "tag": "reality节点",
+      "type": "vless",
+      "server": "127.0.0.1",
+      "server_port": 443,
+      "uuid": "00000000-0000-0000-0000-000000000000",
+      "flow": "xtls-rprx-vision",
+      "tls": {
+        "enabled": true,
+        "server_name": "example.com",
+        "utls": {
+          "enabled": true,
+          "fingerprint": "chrome"
+        },
+        "reality": {
+          "enabled": true,
+          "public_key": "iPiHS0e2or4tlojwZZgR7Rjqt8AOiNnEa9zxPyI5SVo",
+          "short_id": "0000000000"
+        }
+      },
+      "packet_encoding": "xudp"
+    },
+    {
+      "tag": "tuic节点",
+      "type": "tuic",
+      "server": "127.0.0.1",
+      "server_port": 443,
+      "uuid": "00000000-0000-0000-0000-000000000000",
+      "password": "0000000000",
+      "congestion_control": "bbr",
+      "udp_relay_mode": "native",
+      "zero_rtt_handshake": true,
+      "tls": {
+        "enabled": true,
+        "server_name": "example.com",
+        "alpn": "h3"
+      }
+    },
+    {
+      "tag": "shadowsocks节点",
+      "type": "shadowsocks",
+      "server": "127.0.0.1",
+      "server_port": 1024,
+      "method": "2022-blake3-aes-128-gcm",
+      "password": "v+Tca/S9YZ6VY6VvI5aWbg==",
+      "multiplex": {
+        "enabled": true
+      }
     },
     {
       "type": "direct",
@@ -14,8 +76,10 @@
       "type": "selector",
       "tag": "proxy",
       "outbounds": [
-        "节点1",
-        "节点2",
+        "grpc节点",
+        "reality节点",
+        "tuic节点",
+        "shadowsocks节点",
         "auto"
       ],
       "default": "auto"
@@ -24,8 +88,10 @@
       "type": "urltest",
       "tag": "auto",
       "outbounds": [
-        "节点1",
-        "节点2"
+        "grpc节点",
+        "reality节点",
+        "tuic节点",
+        "shadowsocks节点"
       ],
       "url": "https://www.gstatic.com/generate_204",
       "interval": "1m0s",
