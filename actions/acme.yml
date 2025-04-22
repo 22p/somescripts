@@ -50,7 +50,7 @@ jobs:
               NOT_AFTER="--not-after=$(date -u -d "+$VALID_DAYS days" '+%Y-%m-%dT%H:%M:%SZ')"
             fi
 
-            ACTION="renew --no-random-sleep --days ${RENEW_BEFORE_DAYS:-30}"
+            ACTION="renew --no-random-sleep --ari-disable --days ${RENEW_BEFORE_DAYS:-30}"
             if [ ! -f "./.lego/certificates/$DOMAIN.crt" ]; then
               ACTION="run"
             fi
