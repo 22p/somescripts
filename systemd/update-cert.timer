@@ -1,8 +1,8 @@
 [Unit]
-Description=Run update-cert.sh daily (randomized within 1 hour)
+Description=Run update-cert.sh daily
 
 [Timer]
-OnCalendar=daily
+OnCalendar=*-*-* 02:00:00 Asia/Shanghai
 AccuracySec=1h
 Persistent=true
 
