@@ -43,13 +43,9 @@ jobs:
           DOMAIN_LIST=(${{ secrets.DOMAIN_LIST }})
 
           for DOMAIN_INFO in "${DOMAIN_LIST[@]}"; do
-            IFS=',' read -r DOMAIN DNS ACME_SERVER VALID_DAYS RENEW_BEFORE_DAYS <<< "$DOMAIN_INFO"
+            IFS=',' read -r DOMAIN DNS ACME_SERVER PROFILE VALID_DAYS RENEW_BEFORE_DAYS <<< "$DOMAIN_INFO"
 
-            NOT_AFTER=""
-            if [[ -n "$VALID_DAYS" ]]; then
-              NOT_AFTER="--not-after=$(date -u -d "+$VALID_DAYS days" '+%Y-%m-%dT%H:%M:%SZ')"
-            fi
-
+            ACME_SERVER=${ACME_SERVER:-letsencrypt}
             ACTION="renew --no-random-sleep --ari-disable --days ${RENEW_BEFORE_DAYS:-30}"
             if [ ! -f "./.lego/certificates/$DOMAIN.crt" ]; then
               ACTION="run"
@@ -63,7 +59,7 @@ jobs:
               --domains "$DOMAIN" \
               --domains "*.$DOMAIN" \
               --eab \
-              $ACTION $NOT_AFTER
+              $ACTION ${VALID_DAYS:+--not-after=$(date -u -Is -d "+$VALID_DAYS days")} ${PROFILE:+--profile $PROFILE}
           done
         env:
           letsencrypt: https://acme-v02.api.letsencrypt.org/directory

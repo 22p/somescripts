@@ -2,11 +2,11 @@
 此文档将指导您如何配置和使用 GitHub Actions 工作流程来申请和更新 SSL 证书。确保您具有相应的权限和配置来顺利执行该工作流程。**请注意，由于证书会上传到仓库，请将仓库设置为私有**。
 ## 前提条件
  **配置 Secrets**：在仓库的 Settings > Secrets and Variables > Actions 中，配置以下 Secrets：
-   - `DOMAIN_LIST`：需要申请的域名列表，格式为 `<域名>,<DNS服务商>,<ACME服务器>,[证书有效期],[证书剩余时间触发续订]`，每个域名会申请单独的泛域名证书。配置示例：
+   - `DOMAIN_LIST`：需要申请的域名列表，格式为 `<域名>,<DNS服务商>,[ACME服务器],[Profile名称],[证书有效期],[证书剩余时间触发续订]`，每个域名会申请单独的泛域名证书。配置示例：
      ```
-     example.com,cloudflare,letsencrypt
-     example.com,cloudflare,zerossl,,15
-     example.com,cloudflare,google,30,15
+     example.com,cloudflare,,tlsserver
+     example.com,cloudflare,zerossl,,,15
+     example.com,cloudflare,google,,30,15
      ```
    - `DNS_API`：DNS API 配置，一行一个，例如：
      ```
