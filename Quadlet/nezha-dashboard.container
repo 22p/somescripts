@@ -1,0 +1,18 @@
+# mkdir -p ~/containers/nezha-dashboard
+[Unit]
+Description=nezha-dashboard Quadlet
+
+[Container]
+Image=ghcr.io/nezhahq/nezha:latest
+ContainerName=nezha-dashboard
+AutoUpdate=registry
+Environment=TZ=Asia/Shanghai
+Volume=%h/containers/nezha-dashboard:/dashboard/data:Z
+PublishPort=127.0.0.1:8008:8008
+
+[Service]
+Restart=always
+TimeoutStartSec=900
+
+[Install]
+WantedBy=multi-user.target default.target

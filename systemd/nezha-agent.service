@@ -1,0 +1,31 @@
+[Unit]
+Description=Nezha Monitoring Agent
+After=network.target
+
+[Service]
+WorkingDirectory=/opt/nezha
+ExecStart=/opt/nezha/nezha-agent
+Restart=always
+RestartSec=5
+
+CPUQuota=15%
+MemoryMax=64M
+
+NoNewPrivileges=true
+AmbientCapabilities=
+CapabilityBoundingSet=
+ProtectSystem=strict
+ReadWritePaths=/opt/nezha
+ProtectHome=true
+PrivateTmp=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+PrivateDevices=true
+PrivateIPC=true
+RestrictNamespaces=true
+RestrictRealtime=true
+SystemCallFilter=@system-service
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+
+[Install]
+WantedBy=default.target

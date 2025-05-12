@@ -58,6 +58,12 @@
         "action": "reject"
       },
       {
+        "domain": [
+          "blog.cloudflare.com",
+          "developers.cloudflare.com",
+          "hostinger.com",
+          "ahrefs.com"
+        ],
         "rule_set": [
           "geosite-geolocation-cn",
           "geoip-cn"
