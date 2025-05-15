@@ -24,7 +24,7 @@ EOF
 real_ip_header CF-Connecting-IP;
 #real_ip_header X-Forwarded-For;
 EOF
-) >config.cloudflare
+) >inc.cloudflare
 popd >/dev/null
 
 # AdGuardHome
