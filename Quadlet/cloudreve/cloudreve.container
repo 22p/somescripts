@@ -1,0 +1,21 @@
+[Unit]
+Description=Cloudreve container
+
+[Container]
+Pod=cloudreve.pod
+Image=cloudreve.azurecr.io/cloudreve/pro:latest
+ContainerName=cloudreve
+AutoUpdate=registry
+Environment=TZ=Asia/Shanghai
+Environment=CR_CONF_Database.Type=postgres
+Environment=CR_CONF_Database.Host=localhost
+Environment=CR_CONF_Database.User=cloudreve
+Environment=CR_CONF_Database.Name=cloudreve
+Environment=CR_CONF_Database.Port=5432
+Environment=CR_CONF_Redis.Server=localhost:6379
+Environment=CR_LICENSE_KEY=*******
+Volume=cloudreve_data:/cloudreve/data
+
+[Service]
+Restart=always
+TimeoutStartSec=900

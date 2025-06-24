@@ -1,0 +1,13 @@
+[Unit]
+Description=Redis container for Cloudreve
+
+[Container]
+Pod=cloudreve.pod
+Image=docker.io/valkey/valkey:alpine
+ContainerName=cloudreve-redis
+AutoUpdate=registry
+Volume=cloudreve_redis:/data
+
+[Service]
+Restart=always
+TimeoutStartSec=900

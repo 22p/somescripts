@@ -1,0 +1,18 @@
+[Unit]
+Description=PostgresSQL container for Cloudreve
+
+[Container]
+Pod=cloudreve.pod
+Image=docker.io/library/postgres:latest
+ContainerName=cloudreve-postgres
+AutoUpdate=registry
+Environment=TZ=Asia/Shanghai
+Environment=POSTGRES_USER=cloudreve
+Environment=POSTGRES_DB=cloudreve
+Environment=POSTGRES_HOST_AUTH_METHOD=trust
+
+Volume=cloudreve_postgres:/var/lib/postgresql/data
+
+[Service]
+Restart=always
+TimeoutStartSec=900

@@ -1,0 +1,12 @@
+[Unit]
+Description=Pod for Cloudreve Service
+
+[Pod]
+PublishPort=127.0.0.1:5212:5212
+
+[Service]
+Restart=always
+TimeoutStartSec=900
+
+[Install]
+WantedBy=default.target
