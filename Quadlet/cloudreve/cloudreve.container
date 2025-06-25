@@ -1,5 +1,7 @@
 [Unit]
 Description=Cloudreve container
+Wants=cloudreve-postgres.service cloudreve-redis.service
+After=cloudreve-postgres.service cloudreve-redis.service
 
 [Container]
 Pod=cloudreve.pod
@@ -13,7 +15,8 @@ Environment=CR_CONF_Database.User=cloudreve
 Environment=CR_CONF_Database.Name=cloudreve
 Environment=CR_CONF_Database.Port=5432
 Environment=CR_CONF_Redis.Server=localhost:6379
-Environment=CR_LICENSE_KEY=*******
+# echo -n "cloudreve_license_key" | podman secret create CR_LICENSE_KEY -
+Secret=CR_LICENSE_KEY,type=env
 Volume=cloudreve_data:/cloudreve/data
 
 [Service]

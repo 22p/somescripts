@@ -1,5 +1,5 @@
 [Unit]
-Description=PostgresSQL container for Cloudreve
+Description=PostgreSQL container for Cloudreve
 
 [Container]
 Pod=cloudreve.pod
