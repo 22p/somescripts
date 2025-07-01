@@ -13,7 +13,6 @@ Volume=%h/containers/www/conf.d:/etc/nginx/conf.d:ro,Z
 Volume=%h/containers/www/wwwroot:/html:Z
 Volume=%h/containers/www/wwwlogs:/var/log/nginx:Z
 Volume=%h/containers/cert:/cert:ro,z
-Volume=%h/containers/socket:/dev/shm:z
 Network=pasta:-T,auto
 PublishPort=80:80
 PublishPort=443:443

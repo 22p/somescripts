@@ -1,6 +1,4 @@
-# mkdir -p ~/containers/{filebrowser,socket/filebrowser}
-# touch ~/containers/filebrowser/database.db
-# curl -Lo ~/containers/filebrowser/.filebrowser.json https://raw.githubusercontent.com/22p/somescripts/refs/heads/main/Quadlet/data/filebrowser.json
+# mkdir -p ~/containers/filebrowser/{config,database}
 [Unit]
 Description=filebrowser Quadlet
 
@@ -8,17 +6,17 @@ Description=filebrowser Quadlet
 Image=docker.io/filebrowser/filebrowser:latest
 ContainerName=filebrowser
 AutoUpdate=registry
+User=0
+Group=0
 Environment=TZ=Asia/Shanghai
-Volume=%h/containers/filebrowser/database.db:/database.db:Z
-Volume=%h/containers/filebrowser/.filebrowser.json:/.filebrowser.json:Z
-Volume=%h/containers/socket/filebrowser:/dev/shm:z
+Volume=%h/containers/filebrowser/config:/config:Z
+Volume=%h/containers/filebrowser/database:/database:Z
 # Volume=/opt/data:/srv:z
-Network=none
+PublishPort=127.0.0.1:9900:80
 
 [Service]
 Restart=always
 TimeoutStartSec=900
-ExecStartPre=/bin/rm -f %h/containers/socket/filebrowser/filebrowser.socket
 
 [Install]
 WantedBy=multi-user.target default.target
