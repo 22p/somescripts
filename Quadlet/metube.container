@@ -1,0 +1,25 @@
+# mkdir -p ~/containers/metube
+[Unit]
+Description=MeTube Quadlet
+
+[Container]
+Image=ghcr.io/alexta69/metube:latest
+ContainerName=metube
+AutoUpdate=registry
+Environment=TZ=Asia/Shanghai
+Environment=UID=0
+Environment=GID=0
+# https://github.com/alexta69/metube?tab=readme-ov-file#using-browser-cookies
+# podman secret create metube_cookies cookies.txt
+Environment=YTDL_OPTIONS='{"cookiefile":"/run/secrets/metube_cookies"}'
+Secret=metube_cookies
+
+Volume=%h/containers/metube:/downloads:Z
+PublishPort=127.0.0.1:8081:8081
+
+[Service]
+Restart=always
+TimeoutStartSec=900
+
+[Install]
+WantedBy=multi-user.target default.target
