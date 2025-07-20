@@ -1,4 +1,4 @@
-# mkdir -p ~/containers/{www/{conf.d,wwwroot/{default,file},wwwlogs},cert,socket}
+# mkdir -p ~/containers/{www/{conf.d,wwwroot/{default,file},wwwlogs},cert}
 # curl -Lo ~/containers/www/nginx.conf https://raw.githubusercontent.com/22p/somescripts/refs/heads/main/Quadlet/data/nginx.conf
 [Unit]
 Description=Nginx Quadlet

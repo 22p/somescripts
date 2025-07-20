@@ -1,0 +1,12 @@
+[Unit]
+Description=Pod for Vaultwarden Service
+
+[Pod]
+PublishPort=127.0.0.1:9999:80
+
+[Service]
+Restart=always
+TimeoutStartSec=900
+
+[Install]
+WantedBy=default.target

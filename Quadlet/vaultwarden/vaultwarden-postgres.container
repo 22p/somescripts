@@ -1,0 +1,14 @@
+[Unit]
+Description=PostgreSQL container for Vaultwarden
+
+[Container]
+Pod=vaultwarden.pod
+Image=docker.io/library/postgres:latest
+ContainerName=vaultwarden-postgres
+AutoUpdate=registry
+Environment=TZ=Asia/Shanghai
+Environment=POSTGRES_USER=vaultwarden
+Environment=POSTGRES_DB=vaultwarden
+Environment=POSTGRES_HOST_AUTH_METHOD=trust
+
+Volume=vaultwarden_postgres:/var/lib/postgresql/data

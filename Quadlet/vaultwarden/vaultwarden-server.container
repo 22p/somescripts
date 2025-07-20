@@ -2,19 +2,13 @@
 Description=Bitwarden Server (Rust Edition)
 Documentation=https://github.com/dani-garcia/vaultwarden
 
-After=network.target
+Wants=vaultwarden-postgres.service
+After=vaultwarden-postgres.service
 
 [Container]
+Pod=vaultwarden.pod
 Image=ghcr.io/dani-garcia/vaultwarden:latest
-ContainerName=vaultwarden
+ContainerName=vaultwarden-server
 AutoUpdate=registry
 EnvironmentFile=%h/.config/vaultwarden.env
-Volume=vaultwarden-data:/data
-PublishPort=127.0.0.1:9999:80
-
-[Service]
-Restart=always
-TimeoutStartSec=900
-
-[Install]
-WantedBy=default.target
+Volume=vaultwarden_data:/data
