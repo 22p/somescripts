@@ -1,20 +1,16 @@
-# https://jellyfin.org/docs/general/installation/container/#managing-via-systemd
-# https://github.com/notofonts/noto-cjk/tree/main/Sans/OTC
-# mkdir -p ~/containers/{jellyfin,fonts}
 [Unit]
 Description=Jellyfin Quadlet
+Documentation=https://jellyfin.org/docs/general/installation/container/#managing-via-systemd
 
 [Container]
-Image=docker.io/jellyfin/jellyfin:latest
+Image=ghcr.io/jellyfin/jellyfin:latest
 ContainerName=jellyfin
 AutoUpdate=registry
 AddDevice=/dev/dri:/dev/dri
-UserNS=keep-id
 Environment=TZ=Asia/Shanghai
-Volume=%h/containers/jellyfin:/config:Z
-Volume=%h/containers/fonts:/usr/share/fonts/opentype:ro,z
+Volume=jellyfin-config:/config
+Volume=jellyfin-cache:/cache
 # Volume=/opt/data:/data:ro,z
-Network=pasta
 PublishPort=8096:8096
 
 [Service]
@@ -24,4 +20,4 @@ TimeoutStartSec=900
 SuccessExitStatus=0 143
 
 [Install]
-WantedBy=multi-user.target default.target
+WantedBy=default.target

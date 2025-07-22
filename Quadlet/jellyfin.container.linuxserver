@@ -1,19 +1,16 @@
-# mkdir -p ~/containers/{jellyfin,fonts}
 [Unit]
 Description=Jellyfin Quadlet
+Documentation=https://docs.linuxserver.io/images/docker-jellyfin/
 
 [Container]
-Image=docker.io/linuxserver/jellyfin
+Image=ghcr.io/linuxserver/jellyfin
 ContainerName=jellyfin
 AutoUpdate=registry
 AddDevice=/dev/dri:/dev/dri
-Environment=PUID=0
-Environment=PGID=0
 Environment=TZ=Asia/Shanghai
-Volume=%h/containers/jellyfin:/config:Z
-Volume=%h/containers/fonts:/usr/share/fonts/opentype:ro,z
+Environment=DOCKER_MODS=linuxserver/mods:jellyfin-opencl-intel
+Volume=jellyfin-config:/config
 # Volume=/opt/data:/data:ro,z
-Network=pasta
 PublishPort=8096:8096
 
 [Service]
@@ -21,4 +18,4 @@ Restart=always
 TimeoutStartSec=900
 
 [Install]
-WantedBy=multi-user.target default.target
+WantedBy=default.target
