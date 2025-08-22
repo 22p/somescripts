@@ -72,7 +72,7 @@
       },
       {
         "ip_is_private": true,
-        "outbound": "direct"
+        "outbound": "intranet"
       }
     ],
     "rule_set": [

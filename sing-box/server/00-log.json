@@ -1,7 +1,6 @@
 {
   "log": {
     "level": "warn",
-    "output": "/app/box.log",
     "timestamp": true
   }
 }

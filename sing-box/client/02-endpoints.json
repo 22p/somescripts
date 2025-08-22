@@ -1,0 +1,16 @@
+{
+  "endpoints": [
+    {
+      "type": "tailscale",
+      "tag": "Tailscale",
+      "auth_key": "tskey-auth-*****",
+      "control_url": "https://controlplane.tailscale.com",
+      "ephemeral": true,
+      "accept_routes": true,
+      //"exit_node": "",
+      //"exit_node_allow_lan_access": true,
+      //"advertise_routes": [ "192.168.3.0/24" ],
+      //"advertise_exit_node": true
+    }
+  ]
+}

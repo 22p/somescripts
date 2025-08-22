@@ -1,0 +1,25 @@
+{
+  "services": [
+    {
+      "type": "derp",
+      "tag": "derp",
+      "listen": "::",
+      "listen_port": 443,
+      "tls": {
+        "enabled": true,
+        "server_name": "derp.example.com",
+        "acme": {
+          "domain": "derp.example.com",
+          "data_directory": "/app/acme",
+          "email": "ssl@example.com"
+        }
+      },
+      "config_path": "/app/derper.key",
+      "home": "https://example.com",
+      "stun": {
+        "enabled": true,
+        "listen_port": 3478
+      }
+    }
+  ]
+}

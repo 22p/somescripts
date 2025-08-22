@@ -5,6 +5,7 @@ ssl_certificate_key /cert/private.key;
 
 # https://ssl-config.mozilla.org
 ssl_protocols TLSv1.3;
+ssl_ecdh_curve X25519MLKEM768:X25519;
 ssl_prefer_server_ciphers off;
 
 # QUIC / HTTP/3
