@@ -1,18 +1,14 @@
-# mkdir -p ~/containers/{www/{conf.d,wwwroot/{default,file},wwwlogs},cert}
-# curl -Lo ~/containers/www/nginx.conf https://raw.githubusercontent.com/22p/somescripts/refs/heads/main/Quadlet/data/nginx.conf
 [Unit]
-Description=Nginx Quadlet
+Description=Nginx Web Server Container
 
 [Container]
 Image=docker.io/library/nginx:alpine
 ContainerName=nginx
 AutoUpdate=registry
 Environment=TZ=Asia/Shanghai
-Volume=%h/containers/www/nginx.conf:/etc/nginx/nginx.conf:ro,Z
-Volume=%h/containers/www/conf.d:/etc/nginx/conf.d:ro,Z
-Volume=%h/containers/www/wwwroot:/html:Z
-Volume=%h/containers/www/wwwlogs:/var/log/nginx:Z
-Volume=%h/containers/cert:/cert:ro,z
+Volume=nginx-conf:/etc/nginx/conf.d:ro
+Volume=nginx-html:/html
+Volume=nginx-logs:/var/log/nginx
 Network=pasta:-T,auto
 PublishPort=80:80
 PublishPort=443:443
@@ -23,4 +19,4 @@ Restart=always
 TimeoutStartSec=900
 
 [Install]
-WantedBy=multi-user.target default.target
+WantedBy=default.target

@@ -1,0 +1,21 @@
+[Unit]
+Description=PeerBanHelper Container
+Documentation=https://docs.pbh-btn.com/docs/intro
+
+[Container]
+Image=docker.io/ghostchu/peerbanhelper:latest
+ContainerName=peerbanhelper
+AutoUpdate=registry
+Environment=PUID=0
+Environment=PGID=0
+Environment=TZ=Asia/Shanghai
+
+Volume=pbh-data:/app/data
+PublishPort=9898:9898
+
+[Service]
+Restart=always
+TimeoutStartSec=900
+
+[Install]
+WantedBy=default.target

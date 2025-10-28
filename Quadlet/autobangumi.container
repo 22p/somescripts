@@ -1,0 +1,20 @@
+[Unit]
+Description=AutoBangumi Quadlet
+Documentation=https://www.autobangumi.org/deploy/quick-start.html
+
+[Container]
+Image=ghcr.io/estrellaxd/auto_bangumi:latest
+ContainerName=autobangumi
+AutoUpdate=registry
+Environment=PUID=0
+Environment=PGID=0
+Volume=autobangumi-config:/app/config
+Volume=autobangumi-data:/app/data
+PublishPort=7892:7892
+
+[Service]
+Restart=always
+TimeoutStartSec=900
+
+[Install]
+WantedBy=default.target

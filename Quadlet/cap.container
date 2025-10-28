@@ -1,0 +1,18 @@
+[Unit]
+Description=cap-standalone container
+
+[Container]
+Image=docker.io/tiago2/cap:latest
+ContainerName=cap-standalone
+AutoUpdate=registry
+Environment=TZ=Asia/Shanghai
+Environment=ADMIN_KEY=******
+Volume=cap-data:/usr/src/app/.data
+PublishPort=127.0.0.1:3000:3000
+
+[Service]
+Restart=always
+TimeoutStartSec=900
+
+[Install]
+WantedBy=default.target

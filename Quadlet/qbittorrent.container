@@ -1,0 +1,24 @@
+[Unit]
+Description=Qbittorrent Quadlet
+Requires=peerbanhelper.service
+After=peerbanhelper.service
+
+[Container]
+Image=docker.io/linuxserver/qbittorrent:latest
+ContainerName=qbittorrent
+AutoUpdate=registry
+Environment=TZ=Asia/Shanghai
+Environment=PUID=0
+Environment=PGID=0
+Volume=qbittorrent:/config
+Volume=/opt/data/downloads:/downloads:z
+PublishPort=8080:8080
+PublishPort=6881:6881
+PublishPort=6881:6881/udp
+
+[Service]
+Restart=always
+TimeoutStartSec=900
+
+[Install]
+WantedBy=default.target
