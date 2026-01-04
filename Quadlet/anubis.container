@@ -1,0 +1,22 @@
+[Unit]
+Description=Anubis Bot Protection Service
+Documentation=https://anubis.techaro.lol/docs/
+
+After=network-online.target
+
+[Container]
+Image=ghcr.io/techarohq/anubis:latest
+ContainerName=anubis
+AutoUpdate=registry
+EnvironmentFile=%E/anubis/anubis.env
+Volume=%E/anubis/botPolicy.yaml:/botPolicy.yaml:ro,Z
+Volume=%t/socket:/run/socket:z
+Volume=anubis:/data
+
+[Service]
+Restart=always
+RuntimeDirectory=socket
+RuntimeDirectoryMode=0777
+
+[Install]
+WantedBy=default.target

@@ -1,14 +1,19 @@
 [Unit]
 Description=Nginx Web Server Container
+Documentation=https://nginx.org/en/docs/
+
+After=anubis.service
+Requires=anubis.service
 
 [Container]
 Image=docker.io/library/nginx:alpine
 ContainerName=nginx
 AutoUpdate=registry
 Environment=TZ=Asia/Shanghai
-Volume=nginx-conf:/etc/nginx/conf.d:ro
+Volume=nginx-conf:/etc/nginx:ro
 Volume=nginx-html:/html
 Volume=nginx-logs:/var/log/nginx
+Volume=%t/socket:/run/socket:z
 Network=pasta:-T,auto
 PublishPort=80:80
 PublishPort=443:443

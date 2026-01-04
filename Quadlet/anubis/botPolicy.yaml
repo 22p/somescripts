@@ -1,0 +1,112 @@
+# Anubis 机器人防火墙配置
+
+logging:
+  sink: stdio
+  level: "WARN"
+
+bots:
+  # 拦截已知的恶意爬虫
+  - import: (data)/bots/_deny-pathological.yaml
+  - import: (data)/bots/aggressive-brazilian-scrapers.yaml
+
+  # 默认激进拦截 AI/大模型爬虫
+  - import: (data)/meta/ai-block-aggressive.yaml
+  
+  # 允许主流搜索引擎（Google, Bing, DuckDuckGo 等）
+  - import: (data)/crawlers/_allow-good.yaml
+  
+  # 针对 Firefox AI 预览功能的处理
+  - import: (data)/clients/x-firefox-ai.yaml
+
+  # 允许必要的路径（如 robots.txt, favicon, .well-known）
+  - import: (data)/common/keep-internet-working.yaml
+
+  # 强制拦截指定的单个 IP 或 CIDR
+  - name: block-single-ip
+    action: DENY
+    remote_addresses:
+      - 11.165.58.6/32
+      - 3001:b030:a42d:5dcd::59/128
+
+  # API 路径直接放行，不进行挑战
+#  - name: api-bypass
+#    path_regex: ^/api(/.*)?$
+#    action: ALLOW
+
+  - name: allow-api-requests
+    action: ALLOW
+    expression:
+      all:
+        - '"Accept" in headers'
+        - 'headers["Accept"].contains("application/json")'
+        - 'path.startsWith("/api/")'
+
+  # 网站清单文件直接放行
+  - name: manifest
+    path_regex: ^/manifest\.json$
+    action: ALLOW
+
+  # 识别普通浏览器并给予初始权重 10
+  - name: generic-browser
+    user_agent_regex: >-
+      Mozilla|Opera
+    action: WEIGH
+    weight:
+      adjust: 10
+
+# 关闭 DNS 黑名单检查
+dnsbl: false
+
+# Open Graph 预览配置（目前已禁用）
+openGraph:
+  enabled: false
+  considerHost: false
+  ttl: 24h
+
+# 状态码伪装：拦截或挑战时返回 200，让爬虫误以为成功从而停止攻击
+status_codes:
+  CHALLENGE: 200
+  DENY: 200
+
+# 数据存储方式：使用内存存储
+store:
+  backend: bbolt
+  parameters:
+    path: /data/anubis.bdb
+
+# 根据累积的权重决定对客户端采取什么行动
+thresholds:
+  # 权重 <= 0：视为安全，直接放行
+  - name: minimal-suspicion
+    expression: weight <= 0
+    action: ALLOW
+
+  # 权重 1-9：低度可疑，触发 MetaRefresh 刷新挑战
+  - name: mild-suspicion
+    expression:
+      all:
+        - weight > 0
+        - weight < 10
+    action: CHALLENGE
+    challenge:
+      algorithm: metarefresh
+      difficulty: 1
+
+  # 权重 10-29：中度可疑，触发快速工作量证明 (PoW) 挑战
+  - name: moderate-suspicion
+    expression:
+      all:
+        - weight >= 10
+        - weight < 30
+    action: CHALLENGE
+    challenge:
+      algorithm: fast
+      difficulty: 4
+
+  # 权重 >= 30：高度可疑，触发更高难度的 PoW 挑战
+  - name: extreme-suspicion
+    expression: weight >= 30
+    action: CHALLENGE
+    challenge:
+      algorithm: fast
+      difficulty: 6
