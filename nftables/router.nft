@@ -2,9 +2,9 @@
 
 flush ruleset
 
-define DEV_PRIVATE = { tun0, br0 }
+define DEV_PRIVATE = { br0 }
 define DEV_WORLD = { ppp0, enp1s0 }
-define DEV_WG = wg0
+define DEV_VPN = { sb-tun, tailscale0 }
 define NET_PRIVATE = 192.168.0.0/16
 # 封禁列表
 define BANNED_MAC = { f4:1c:71:1f:59:e8 }
@@ -27,19 +27,19 @@ table inet router {
 		ct state established,related accept
 		# 跳转到具体规则链
 		iifname $DEV_PRIVATE jump inbound_private
-		iifname $DEV_WG jump inbound_wireguard
+		iifname $DEV_VPN jump inbound_vpn
 		iifname $DEV_WORLD jump inbound_world
-		jump handle_reject
+		counter jump handle_reject
 	}
 
 	chain inbound_private {
 		# 如果来自私有网络且 MAC 地址在封禁列表中，则丢弃
 		# ether saddr $BANNED_MAC counter drop
-		accept
+		counter accept
 	}
 
-	chain inbound_wireguard {
-		accept
+	chain inbound_vpn {
+		counter accept
 	}
 
 	chain inbound_world {
@@ -52,8 +52,7 @@ table inet router {
 		meta nfproto ipv4 udp dport 68 counter accept # Allow-DHCP-Renew
 		meta nfproto ipv6 udp dport 546 counter accept # Allow-DHCPv6
 		tcp dport 22 counter accept # Allow-SSH
-		udp dport 6699 counter accept # Allow-WireGuard
-		jump handle_reject
+		counter jump handle_reject
 	}
 
 	####################
@@ -65,25 +64,27 @@ table inet router {
 		meta l4proto { tcp, udp } flow offload @ft
 		ct state established,related accept
 		iifname $DEV_PRIVATE jump forward_private
-		iifname $DEV_WG jump forward_wireguard
+		iifname $DEV_VPN jump forward_vpn
 		iifname $DEV_WORLD jump forward_world
-		jump handle_reject
+		counter jump handle_reject
 	}
 
 	chain forward_private {
-		oifname $DEV_WG counter accept
+		oifname $DEV_VPN counter accept
 		oifname $DEV_WORLD counter accept
 	}
 
-	chain forward_wireguard {
-		oifname $DEV_PRIVATE counter accept
+	chain forward_vpn {
+		oifname $DEV_PRIVATE counter accept # VPN → 内网设备
+		oifname $DEV_WORLD counter accept # VPN → 外网 (exit node)
+		oifname $DEV_VPN counter accept # 可选: VPN 之间互访
 	}
 
 	chain forward_world {
 		icmpv6 type 128 counter accept # Allow-Ping6
 		icmpv6 type { 1, 2, 3, 4 } counter accept # Allow-Basic-errors
-		meta l4proto esp counter oifname $DEV_PRIVATE counter accept # Allow-IPSec-ESP
-		udp dport 500 counter oifname $DEV_PRIVATE counter accept # Allow-ISAKMP
+		meta l4proto esp oifname $DEV_PRIVATE counter accept # Allow-IPSec-ESP
+		udp dport 500 oifname $DEV_PRIVATE counter accept # Allow-ISAKMP
 		# meta nfproto ipv6 oifname $DEV_PRIVATE counter accept # 暴露内部网络设备 IPv6 到公网
 	}
 
@@ -97,24 +98,24 @@ table inet router {
 
 		ct state established,related accept
 		oifname $DEV_PRIVATE jump outbound_private
-		oifname $DEV_WG jump outbound_wireguard
+		oifname $DEV_VPN jump outbound_vpn
 		oifname $DEV_WORLD jump outbound_world
 	}
 
 	chain outbound_private {
-		accept
+		counter accept
 	}
 
-	chain outbound_wireguard {
+	chain outbound_vpn {
 		# 防止 NAT 泄漏
 		meta nfproto ipv4 ct state invalid counter drop
-		accept
+		counter accept
 	}
 
 	chain outbound_world {
 		# 防止 NAT 泄漏
 		meta nfproto ipv4 ct state invalid counter drop
-		accept
+		counter accept
 	}
 
 	####################
@@ -136,7 +137,7 @@ table inet router {
 		type nat hook postrouting priority srcnat; policy accept;
 		# 对 IPv4 外部流量进行伪装，将源地址转换为出口接口的公共 IP 地址
 		oifname $DEV_WORLD meta nfproto ipv4 masquerade
-		oifname $DEV_WG meta nfproto ipv4 masquerade
+		# oifname $DEV_VPN meta nfproto ipv4 masquerade
 	}
 
 	####################

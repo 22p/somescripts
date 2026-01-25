@@ -2,7 +2,8 @@
 
 flush ruleset
 
-define DEV_WG = wg0
+define DEV_WAN = ens5
+define DEV_VPN = tailscale0
 define BLOCKED_IP_RANGES = { 192.0.2.0/24, 198.51.100.0/24 }
 define BLOCKED_IP6_RANGES = { 2001:db8::/32, 2001:db8:1234::/48 }
 
@@ -33,11 +34,11 @@ table inet server {
 		type filter hook input priority filter; policy drop;
 
 		iifname "lo" accept
-		iifname $DEV_WG accept
+		iifname $DEV_VPN accept
 		ct state established,related accept
 
 		# 丢弃无效的连接状态
-		ct state invalid counter drop
+		# ct state invalid counter drop
 
 		# 跳转到封禁 IP 范围的链
 		jump drop_ip_ranges
@@ -47,20 +48,29 @@ table inet server {
 		meta nfproto ipv6 udp dport 546 accept # Allow-DHCPv6
 
 		# 允许特定的 ICMP 类型（IPv4 和 IPv6）
-		icmpv6 type { 129, 1, 3, 133, 134, 135, 136 } accept # Allow-ICMPv6-Input
+		icmpv6 type { 129, 1, 2, 3, 4, 133, 134, 135, 136 } accept # Allow-ICMPv6-Input
 		icmpv6 type { 130, 131, 132, 143 } accept # Allow-MLD
-		icmp type 8 limit rate 5/second accept # Allow-Ping
-		icmpv6 type 128 limit rate 5/second accept # Allow-Ping6
+		icmp type 8 limit rate 1000/second accept # Allow-Ping
+		icmpv6 type 128 limit rate 1000/second accept # Allow-Ping6
 
 		# 限制新SSH连接的频率，并自动封禁
-		ct state new ip protocol tcp tcp dport 22 update @ssh_ratelimit { ip saddr limit rate 2/minute burst 3 packets } accept
-		ct state new ip6 nexthdr tcp tcp dport 22 update @ssh_ratelimit_v6 { ip6 saddr limit rate 2/minute burst 3 packets } accept
+		ct state new ip protocol tcp tcp dport 22 update @ssh_ratelimit { ip saddr limit rate 5/minute burst 8 packets } accept
+		ct state new ip6 nexthdr tcp tcp dport 22 update @ssh_ratelimit_v6 { ip6 saddr limit rate 5/minute burst 8 packets } accept
 		ip protocol tcp tcp dport 22 add @ssh_brute_force_block { ip saddr }
 		ip6 nexthdr tcp tcp dport 22 add @ssh_brute_force_block_v6 { ip6 saddr }
 
-		udp dport 51820 counter accept # Allow-WireGuard
 		tcp dport { 80, 443 } counter accept # Allow-HTTP-and-HTTPS
 		udp dport 443 counter accept # Allow-UDP-443
+		tcp dport 12443 counter accept # Allow-DERP
+		udp dport 3478 counter accept # Allow-UDP-DERP
+	}
+
+	chain forward {
+		type filter hook forward priority filter; policy drop;
+		
+		ct state established,related accept
+		
+		iifname $DEV_VPN oifname $DEV_WAN counter accept # 允许 Tailscale → 外网 (Exit Node)
 	}
 
 	# 处理出站流量
@@ -70,7 +80,7 @@ table inet server {
 		oifname "lo" accept
 		ct state established,related accept
 		# 丢弃无效的连接状态
-		ct state invalid counter drop
+		# ct state invalid counter drop
 	}
 
 	# 丢弃来自特定 IP 范围的流量
@@ -79,5 +89,12 @@ table inet server {
 		ip6 saddr @ssh_brute_force_block_v6 drop
 		ip saddr $BLOCKED_IP_RANGES drop
 		ip6 saddr $BLOCKED_IP6_RANGES drop
+	}
+
+	chain srcnat {
+		type nat hook postrouting priority srcnat; policy accept;
+		# 对 IPv4 外部流量进行伪装，将源地址转换为出口接口的公共 IP 地址
+		oifname $DEV_WAN meta nfproto ipv4 masquerade
+		oifname $DEV_WAN meta nfproto ipv6 masquerade
 	}
 }
