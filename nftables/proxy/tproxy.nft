@@ -12,9 +12,9 @@ table inet proxy {
 ## 保留 ip 地址
 include "/etc/nftables/proxy/ip_reserved.nft"
 ## 大陆 ipv4 地址
-include "/etc/nftables/proxy/ip4_cn.nft"
+include "/etc/nftables/proxy/cn_ip4.nft"
 ## 大陆 ipv6 地址
-include "/etc/nftables/proxy/ip6_cn.nft"
+include "/etc/nftables/proxy/cn_ip6.nft"
 
 chain prerouting {
 	type filter hook prerouting priority mangle; policy accept;

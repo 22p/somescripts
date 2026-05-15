@@ -32,22 +32,6 @@ pushd ../AdGuardHome >/dev/null || exit
 curl -sL https://raw.githubusercontent.com/felixonmars/dnsmasq-china-list/master/accelerated-domains.china.conf | awk -F '/' '{if (NF >= 2) print $2}' >accelerated-domains.china.conf
 curl -sL https://raw.githubusercontent.com/felixonmars/dnsmasq-china-list/master/apple.china.conf | awk -F '/' '{if (NF >= 2) print $2}' >>accelerated-domains.china.conf
 curl -sL https://raw.githubusercontent.com/felixonmars/dnsmasq-china-list/master/google.china.conf | awk -F '/' '{if (NF >= 2) print $2}' >>accelerated-domains.china.conf
-
-domains=$(sed 's/^/"/;s/$/"/' accelerated-domains.china.conf | paste -sd ",")
-echo '{
-  "version": 1,
-  "rules": [
-    {
-      "domain_suffix": [
-        '"$domains"'
-      ]
-    }
-  ]
-}' > accelerated-domains.china.json
-
-# sing-box rule-set compile --output ./accelerated-domains.china.srs ./accelerated-domains.china.json
-docker run --rm -v "$(pwd)":/conf ghcr.io/sagernet/sing-box:latest rule-set compile --output /conf/accelerated-domains.china.srs /conf/accelerated-domains.china.json
-
 tr "\n" "/" < accelerated-domains.china.conf >tmp.china.conf
 sed -i \
     -e 's|^|/|' \
@@ -60,17 +44,5 @@ popd >/dev/null
 
 # nftables
 pushd ../nftables/proxy >/dev/null || exit
-curl -sLo ip4_cn.nft https://ispip.clang.cn/all_cn.txt
-sed -i \
-    -e '$!s/$/,/' \
-    -e '$s/$/ }\n}/' \
-    -e '1s/^/set ip4_cn {\n  typeof ip daddr\n  flags interval\n  elements = { /' \
-    ip4_cn.nft
-
-curl -sLo ip6_cn.nft https://ispip.clang.cn/all_cn_ipv6.txt
-sed -i \
-    -e '$!s/$/,/' \
-    -e '$s/$/ }\n}/' \
-    -e '1s/^/set ip6_cn {\n  typeof ip6 daddr\n  flags interval\n  elements = { /' \
-    ip6_cn.nft
+python3 ../../.github/ip.py
 popd >/dev/null
