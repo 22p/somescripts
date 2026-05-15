@@ -1,0 +1,10 @@
+set fo_ipv6 {
+    typeof ip6 daddr
+    flags interval
+    elements = {
+    2a02:e90::/29,
+    2a03:ee00::/32,
+    2a0a:d500::/29,
+    2a0f:38c0::/29
+    }
+}

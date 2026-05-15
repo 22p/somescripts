@@ -1,0 +1,7 @@
+set io_ipv6 {
+    typeof ip6 daddr
+    flags interval
+    elements = {
+    2401:a440::/32
+    }
+}

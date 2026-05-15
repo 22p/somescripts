@@ -1,0 +1,9 @@
+set tm_ipv6 {
+    typeof ip6 daddr
+    flags interval
+    elements = {
+    2001:7f8:165::/48,
+    2a05:2180::/29,
+    2a14:340::/29
+    }
+}

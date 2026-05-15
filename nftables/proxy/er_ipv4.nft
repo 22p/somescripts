@@ -1,0 +1,7 @@
+set er_ipv4 {
+    typeof ip daddr
+    flags interval
+    elements = {
+    196.200.96.0/20
+    }
+}

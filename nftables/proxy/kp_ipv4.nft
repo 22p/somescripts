@@ -1,0 +1,7 @@
+set kp_ipv4 {
+    typeof ip daddr
+    flags interval
+    elements = {
+    175.45.176.0/22
+    }
+}

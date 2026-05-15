@@ -1,0 +1,12 @@
+set bi_ipv6 {
+    typeof ip6 daddr
+    flags interval
+    elements = {
+    2001:43f8:990::/47,
+    2c0f:ef70::/32,
+    2c0f:f6a8::/32,
+    2c0f:f788::/32,
+    2c0f:f908::/32,
+    2c0f:fd78::/32
+    }
+}

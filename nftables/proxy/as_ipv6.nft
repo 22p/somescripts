@@ -1,0 +1,8 @@
+set as_ipv6 {
+    typeof ip6 daddr
+    flags interval
+    elements = {
+    2403:1e00::/32,
+    2403:2140::/32
+    }
+}

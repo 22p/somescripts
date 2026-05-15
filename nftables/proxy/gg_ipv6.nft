@@ -1,0 +1,13 @@
+set gg_ipv6 {
+    typeof ip6 daddr
+    flags interval
+    elements = {
+    2a00:8300::/32,
+    2a01:5480::/32,
+    2a03:7aa0::/32,
+    2a04:6b40::/29,
+    2a07:2fc0::/29,
+    2a07:b140::/29,
+    2a09:5d40::/29
+    }
+}

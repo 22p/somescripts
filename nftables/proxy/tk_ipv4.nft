@@ -1,0 +1,9 @@
+set tk_ipv4 {
+    typeof ip daddr
+    flags interval
+    elements = {
+    27.96.24.0/21,
+    194.0.38.0/23,
+    194.0.40.0/23
+    }
+}

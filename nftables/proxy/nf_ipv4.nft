@@ -1,0 +1,8 @@
+set nf_ipv4 {
+    typeof ip daddr
+    flags interval
+    elements = {
+    103.43.204.0/23,
+    203.142.221.0/24
+    }
+}

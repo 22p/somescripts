@@ -1,0 +1,10 @@
+set kn_ipv6 {
+    typeof ip6 daddr
+    flags interval
+    elements = {
+    2602:f3fc::/36,
+    2602:fb78::/40,
+    2620:18:c000::/48,
+    2620:6b:2000::/48
+    }
+}

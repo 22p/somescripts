@@ -1,0 +1,7 @@
+set nf_ipv6 {
+    typeof ip6 daddr
+    flags interval
+    elements = {
+    2001:df0:20c::/48
+    }
+}

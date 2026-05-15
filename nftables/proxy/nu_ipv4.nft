@@ -1,0 +1,8 @@
+set nu_ipv4 {
+    typeof ip daddr
+    flags interval
+    elements = {
+    49.156.48.0/22,
+    202.59.4.0/22
+    }
+}

@@ -1,0 +1,7 @@
+set pm_ipv6 {
+    typeof ip6 daddr
+    flags interval
+    elements = {
+    2604:ca40::/32
+    }
+}

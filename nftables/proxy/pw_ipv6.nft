@@ -1,0 +1,9 @@
+set pw_ipv6 {
+    typeof ip6 daddr
+    flags interval
+    elements = {
+    2001:67c:ec8::/48,
+    2401:6e0::/32,
+    2404:7800::/32
+    }
+}

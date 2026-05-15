@@ -1,0 +1,8 @@
+set km_ipv6 {
+    typeof ip6 daddr
+    flags interval
+    elements = {
+    2c0f:f2c8::/32,
+    2c0f:f560::/32
+    }
+}

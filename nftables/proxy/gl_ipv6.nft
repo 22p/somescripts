@@ -1,0 +1,9 @@
+set gl_ipv6 {
+    typeof ip6 daddr
+    flags interval
+    elements = {
+    2a00:1fa8::/32,
+    2a03:fdc0::/32,
+    2a0e:3b80::/29
+    }
+}

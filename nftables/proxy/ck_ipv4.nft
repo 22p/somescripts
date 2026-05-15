@@ -1,0 +1,8 @@
+set ck_ipv4 {
+    typeof ip daddr
+    flags interval
+    elements = {
+    116.199.200.0/23,
+    202.65.32.0/19
+    }
+}

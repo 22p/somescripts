@@ -1,0 +1,9 @@
+set ki_ipv6 {
+    typeof ip6 daddr
+    flags interval
+    elements = {
+    2401:dfc0::/32,
+    2402:1de0::/32,
+    2406:cd00::/32
+    }
+}

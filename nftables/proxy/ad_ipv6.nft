@@ -1,0 +1,8 @@
+set ad_ipv6 {
+    typeof ip6 daddr
+    flags interval
+    elements = {
+    2a01:fb00::/29,
+    2a02:8060::/31
+    }
+}

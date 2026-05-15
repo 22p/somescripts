@@ -1,0 +1,9 @@
+set aw_ipv6 {
+    typeof ip6 daddr
+    flags interval
+    elements = {
+    2800:ad0::/32,
+    2801:19:5800::/48,
+    2803:b640::/32
+    }
+}

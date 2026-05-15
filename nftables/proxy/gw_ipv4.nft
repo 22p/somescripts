@@ -1,0 +1,9 @@
+set gw_ipv4 {
+    typeof ip daddr
+    flags interval
+    elements = {
+    102.219.174.0/23,
+    154.73.60.0/22,
+    197.214.80.0/20
+    }
+}

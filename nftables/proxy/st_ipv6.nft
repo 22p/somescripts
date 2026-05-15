@@ -1,0 +1,7 @@
+set st_ipv6 {
+    typeof ip6 daddr
+    flags interval
+    elements = {
+    2c0f:fa88::/32
+    }
+}

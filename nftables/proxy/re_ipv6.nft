@@ -1,0 +1,12 @@
+set re_ipv6 {
+    typeof ip6 daddr
+    flags interval
+    elements = {
+    2a00:a080::/32,
+    2a0b:dc00::/29,
+    2c0f:3780::/28,
+    2c0f:6c00::/32,
+    2c0f:f608::/32,
+    2c0f:f918::/32
+    }
+}

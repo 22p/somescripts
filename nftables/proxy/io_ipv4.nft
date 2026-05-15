@@ -1,0 +1,8 @@
+set io_ipv4 {
+    typeof ip daddr
+    flags interval
+    elements = {
+    202.44.112.0/22,
+    203.83.48.0/21
+    }
+}

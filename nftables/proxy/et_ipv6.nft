@@ -1,0 +1,11 @@
+set et_ipv6 {
+    typeof ip6 daddr
+    flags interval
+    elements = {
+    2001:43f8:1710::/47,
+    2c0f:36c0::/32,
+    2c0f:3c40::/32,
+    2c0f:6f00::/32,
+    2c0f:f348::/32
+    }
+}

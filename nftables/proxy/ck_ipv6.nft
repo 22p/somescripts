@@ -1,0 +1,8 @@
+set ck_ipv6 {
+    typeof ip6 daddr
+    flags interval
+    elements = {
+    2401:4d20::/32,
+    2407:5800::/32
+    }
+}

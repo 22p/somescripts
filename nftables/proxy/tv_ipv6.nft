@@ -1,0 +1,8 @@
+set tv_ipv6 {
+    typeof ip6 daddr
+    flags interval
+    elements = {
+    2400:3500::/32,
+    2401:c720::/32
+    }
+}

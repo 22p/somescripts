@@ -1,0 +1,9 @@
+set va_ipv6 {
+    typeof ip6 daddr
+    flags interval
+    elements = {
+    2a01:b8::/29,
+    2a04:640::/29,
+    2a07:8100::/29
+    }
+}

@@ -1,0 +1,9 @@
+set bl_ipv4 {
+    typeof ip daddr
+    flags interval
+    elements = {
+    23.135.232.0/24,
+    149.112.20.0/24,
+    206.83.45.0/24
+    }
+}

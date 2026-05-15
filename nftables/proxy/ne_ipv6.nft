@@ -1,0 +1,10 @@
+set ne_ipv6 {
+    typeof ip6 daddr
+    flags interval
+    elements = {
+    2c0f:3700::/32,
+    2c0f:6880::/32,
+    2c0f:eae8::/32,
+    2c0f:f8c8::/32
+    }
+}

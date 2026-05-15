@@ -1,0 +1,7 @@
+set yt_ipv4 {
+    typeof ip daddr
+    flags interval
+    elements = {
+    41.242.116.0/22
+    }
+}
