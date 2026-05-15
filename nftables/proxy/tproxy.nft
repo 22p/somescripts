@@ -12,16 +12,16 @@ table inet proxy {
 ## 保留 ip 地址
 include "/etc/nftables/proxy/ip_reserved.nft"
 ## 大陆 ipv4 地址
-include "/etc/nftables/proxy/cn_ip4.nft"
+include "/etc/nftables/proxy/cn_ipv4.nft"
 ## 大陆 ipv6 地址
-include "/etc/nftables/proxy/cn_ip6.nft"
+include "/etc/nftables/proxy/cn_ipv6.nft"
 
 chain prerouting {
 	type filter hook prerouting priority mangle; policy accept;
 	ip daddr @ip4_reserved return
 	ip6 daddr @ip6_reserved return
-	ip daddr @ip4_cn th dport != 53 return
-	ip6 daddr @ip6_cn th dport != 53 return
+	ip daddr @cn_ipv4 th dport != 53 return
+	ip6 daddr @cn_ipv6 th dport != 53 return
 	meta l4proto { tcp, udp } tproxy to :$TPROXY_PORT meta mark set $FWMARK accept
 }
 
@@ -29,8 +29,8 @@ chain output {
 	type route hook output priority mangle; policy accept;
 	ip daddr @ip4_reserved return
 	ip6 daddr @ip6_reserved return
-	ip daddr @ip4_cn th dport != 53 return
-	ip6 daddr @ip6_cn th dport != 53 return
+	ip daddr @cn_ipv4 th dport != 53 return
+	ip6 daddr @cn_ipv6 th dport != 53 return
 	meta l4proto { tcp, udp } meta mark set $FWMARK
 }
 }
