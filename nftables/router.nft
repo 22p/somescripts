@@ -14,7 +14,6 @@ table inet router {
 	# Flowtable 设置
 	flowtable ft {
 		hook ingress priority 0;
-		devices = { eno1, enp1s0, enp2s0, enp4s0 };
 	}
 
 	####################

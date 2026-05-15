@@ -1,0 +1,9 @@
+#!/bin/bash
+# /etc/NetworkManager/dispatcher.d/99-nft-flowtable
+
+INTERFACE=$1
+ACTION=$2
+
+if [[ "$INTERFACE" =~ ^(ppp|br|en|eth) ]] && [[ "$ACTION" == "up" ]]; then
+    /usr/sbin/nft "add flowtable inet router ft { hook ingress priority filter; devices = { $INTERFACE }; }"
+fi
