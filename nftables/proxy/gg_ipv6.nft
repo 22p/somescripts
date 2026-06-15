@@ -3,6 +3,7 @@ set gg_ipv6 {
     flags interval
     elements = {
     2a00:8300::/32,
+    2a01:b00::/29,
     2a01:5480::/32,
     2a03:7aa0::/32,
     2a04:6b40::/29,

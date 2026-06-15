@@ -1,0 +1,9 @@
+set aq_ipv4 {
+    typeof ip daddr
+    flags interval
+    elements = {
+    23.154.160.0/24,
+    131.143.220.0/23,
+    209.127.204.0/24
+    }
+}
