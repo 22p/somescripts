@@ -2,7 +2,6 @@ set mv_ipv6 {
     typeof ip6 daddr
     flags interval
     elements = {
-    2001:dde::/48,
     2001:dec:c000::/48,
     2001:df0:1d00::/48,
     2001:df0:1f00::/48,

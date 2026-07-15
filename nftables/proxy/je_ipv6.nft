@@ -2,6 +2,7 @@ set je_ipv6 {
     typeof ip6 daddr
     flags interval
     elements = {
+    2a00:f180::/32,
     2a01:94a0::/32,
     2a01:a400::/29,
     2a02:c28::/29,
