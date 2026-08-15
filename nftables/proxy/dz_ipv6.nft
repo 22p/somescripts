@@ -3,6 +3,7 @@ set dz_ipv6 {
     flags interval
     elements = {
     2001:4340::/32,
+    2c0f:11a0::/32,
     2c0f:41a0::/32,
     2c0f:e8b0::/32,
     2c0f:ea88::/32,
